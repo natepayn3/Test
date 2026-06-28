@@ -40,7 +40,7 @@ Item {
             color: styleRoot.bgDarkGrey
             z: 2
 
-            x: 3 - (popupContent.x > 0 ? popupContent.x : 0)
+            x: 0- (popupContent.x > 0 ? popupContent.x : 0)
             width: parent.width - styleRoot.wingSize + (popupContent.x > 0 ? popupContent.x : 0)
 
             layer.enabled: true
@@ -71,7 +71,7 @@ Item {
 
             // Top-Left Inverted Corner Wing
             Item { 
-                x: 0; y: -styleRoot.wingSize
+                x: 4; y: -styleRoot.wingSize
                 width: styleRoot.wingSize; height: styleRoot.wingSize; clip: true
                 Rectangle {
                     width: styleRoot.wingSize * 6; height: styleRoot.wingSize * 6; radius: styleRoot.wingSize * 3
@@ -82,7 +82,7 @@ Item {
 
             // Bottom-Left Inverted Corner Wing
             Item {
-                x: 0; y: parent.height
+                x: 4; y: parent.height
                 width: styleRoot.wingSize; height: styleRoot.wingSize; clip: true
                 
                 Rectangle {
