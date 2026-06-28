@@ -9,21 +9,25 @@ Rectangle {
 
     property var notificationModel: notifServer.trackedNotifications
 
-    // Dynamically calculate footprint based on content
-    implicitHeight: notifList.count <= 0 ? 80 : (notifList.count === 1 ? 132 : 204)
+    // Collapses to exactly 0 height when empty, scales dynamically with items
+    implicitHeight: notifList.count <= 0 ? 0 : Math.min(220, (notifList.count * 72) + (clearRow.visible ? 32 : 0) + 32)
+    
     Behavior on implicitHeight { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+
+    visible: notifList.count > 0
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 12
 
-        // Header Row (Only shows "Clear all" when there are notifications)
+        // Header Row
         RowLayout {
+            id: clearRow
             Layout.fillWidth: true
-            visible: notifList.count > 0 
-            
-            Item { Layout.fillWidth: true } 
+            visible: notifList.count > 0
+         
+            Item { Layout.fillWidth: true }
             
             Item {
                 implicitWidth: clearText.width + 8; implicitHeight: 10
@@ -35,7 +39,7 @@ Rectangle {
                     font.pixelSize: 12
                     font.bold: true
                     anchors.centerIn: parent
-                    color: clearMouse.containsMouse ? rootShell.colorText : rootShell.colorAccent 
+                    color: clearMouse.containsMouse ? rootShell.colorText : rootShell.colorAccent
                 }
                 
                 MouseArea {
@@ -53,21 +57,6 @@ Rectangle {
                         }
                     }
                 }
-            }
-        }
-
-        // Empty State
-        Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            visible: notifList.count === 0
-
-            Text { 
-                text: "No notifications" 
-                anchors.centerIn: parent 
-                font.family: rootShell.shellFont 
-                color: rootShell.colorSubtext 
-                font.pixelSize: 13 
             }
         }
 
