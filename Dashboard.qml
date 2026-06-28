@@ -224,44 +224,64 @@ Item {
             anchors.margins: 14
             spacing: 12
 
-            // BLOCK 1: Clean Clock Header Layout (Split Mode)
+            // BLOCK 1: Centered Clock Header Layout (Side-by-Side Format)
             RowLayout {
                 Layout.fillWidth: true
-                
-                // Left Side: Time Array (Safely guarded against undefined parent states)
-                Text {
-                    id: clockTimeLabel
-                    text: (typeof rootShell !== "undefined" && rootShell.clockRef && rootShell.clockRef.currentTime) ? 
-                          rootShell.clockRef.currentTime.toLocaleTimeString(Qt.locale(), "h:mm AP") : "9:10 PM"
-                    font.family: typeof rootShell !== "undefined" ? rootShell.shellFont : "Sans"
-                    font.pixelSize: 34; font.bold: true; color: typeof rootShell !== "undefined" ? rootShell.colorText : "#f5f5f5"
+                Layout.alignment: Qt.AlignHCenter // 🎯 Centers the entire row block
+
+                // Center-balanced spacer setup
+                Item { Layout.fillWidth: true }
+
+                RowLayout {
+                    spacing: 16
+                    
+                    // Large Clock Text
+                    Text {
+                        id: clockTimeLabel
+                        text: (typeof rootShell !== "undefined" && rootShell.clockRef && rootShell.clockRef.currentTime) ? 
+                              rootShell.clockRef.currentTime.toLocaleTimeString(Qt.locale(), "h:mm AP") : "9:24 PM"
+                        font.family: typeof rootShell !== "undefined" ? rootShell.shellFont : "Sans"
+                        font.pixelSize: 32
+                        font.bold: true
+                        color: typeof rootShell !== "undefined" ? rootShell.colorText : "#f5f5f5"
+                    }
+
+                    // Stacked Day & Date directly next to it
+                    ColumnLayout {
+                        spacing: 2
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        
+                        Text {
+                            text: (typeof rootShell !== "undefined" && rootShell.clockRef && rootShell.clockRef.currentTime) ? 
+                                  rootShell.clockRef.currentTime.toLocaleDateString(Qt.locale(), "dddd") : "Saturday"
+                            font.family: typeof rootShell !== "undefined" ? rootShell.shellFont : "Sans"
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: typeof rootShell !== "undefined" ? rootShell.colorText : "#f5f5f5"
+                        }
+                        Text {
+                            text: (typeof rootShell !== "undefined" && rootShell.clockRef && rootShell.clockRef.currentTime) ? 
+                                  rootShell.clockRef.currentTime.toLocaleDateString(Qt.locale(), "MMMM d") : "June 27"
+                            font.family: typeof rootShell !== "undefined" ? rootShell.shellFont : "Sans"
+                            font.pixelSize: 12
+                            color: typeof rootShell !== "undefined" ? rootShell.colorSubtext : "#a6adc8"
+                        }
+                    }
                 }
 
-                // Right Side: Stacked Day/Date Strings
-                ColumnLayout {
-                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                    spacing: 0
-                    Text {
-                        text: (typeof rootShell !== "undefined" && rootShell.clockRef && rootShell.clockRef.currentTime) ? 
-                              rootShell.clockRef.currentTime.toLocaleDateString(Qt.locale(), "dddd") : "Saturday"
-                        font.family: typeof rootShell !== "undefined" ? rootShell.shellFont : "Sans"
-                        font.pixelSize: 15; font.bold: true; color: typeof rootShell !== "undefined" ? rootShell.colorText : "#f5f5f5"; horizontalAlignment: Text.AlignRight
-                    }
-                    Text {
-                        text: (typeof rootShell !== "undefined" && rootShell.clockRef && rootShell.clockRef.currentTime) ? 
-                              rootShell.clockRef.currentTime.toLocaleDateString(Qt.locale(), "MMMM d") : "June 27"
-                        font.family: typeof rootShell !== "undefined" ? rootShell.shellFont : "Sans"
-                        font.pixelSize: 12; color: typeof rootShell !== "undefined" ? rootShell.colorSubtext : "#a6adc8"; horizontalAlignment: Text.AlignRight
-                    }
-                }
+                Item { Layout.fillWidth: true }
             }
 
-            // BLOCK 2: Inline Climate Row
+            // BLOCK 2: Inline Climate Row (Centered)
             RowLayout {
                 Layout.fillWidth: true
+                Layout.alignment: Qt.AlignHCenter
                 spacing: 6
+                
+                Item { Layout.fillWidth: true } // Left balance spacer
                 Text { text: "cloud"; font.family: "Material Symbols Outlined"; font.pixelSize: 14; color: rootShell.colorAccent }
                 Text { text: dashboardRoot.weatherDesc + "  •  Feels like " + dashboardRoot.weatherTemp; font.family: rootShell.shellFont; font.pixelSize: 11; color: rootShell.colorSubtext }
+                Item { Layout.fillWidth: true } // Right balance spacer
             }
 
             // BLOCK 3: Horizontal Monitors Grid (4 Rings Line up side-by-side)
@@ -369,8 +389,11 @@ Item {
 
             // BLOCK 8: Embedded Active Stream Notification Box
             NotificationCenter {
+                id: notificationArea
                 Layout.fillWidth: true
-                Layout.fillHeight: true
+                
+                // Let the child component's implicitHeight math control the size dynamically
+                visible: count > 0
             }
         }
     }
