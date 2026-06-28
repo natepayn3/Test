@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
+import "components"
 
 ShellRoot {
     id: shellRoot
@@ -144,32 +145,41 @@ ShellRoot {
         
         implicitHeight: 65
         color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.layer: WlrLayer.Top
+        
+        exclusiveZone: 0
+
+        // Clickthrough Mask: Directs the compositor to only register clicks inside the visual dock bounds
+        mask: Region {
+            item: masterContainer
+        }
 
         Item {
-            anchors.fill: parent
+            id: masterContainer
+            width: 240
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
 
             // Invisible tracking target fixed at the absolute bottom edge of the screen
             MouseArea {
                 id: hotspotTrigger
-                width: 140
+                width: 220
                 height: 12
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 hoverEnabled: true
             }
 
-            // The actual visual launcher box that slides up
-            Rectangle {
-                id: visualButton
-                width: 120
-                height: 55
-                radius: 12
+            // --- TRANSPARENT DOCK CONTAINER ---
+            MouseArea {
+                id: dockHitbox
+                width: visualDock.width + 20 
+                height: 60
                 anchors.horizontalCenter: parent.horizontalCenter
-                
-                // Keep pinned open if hovered OR if the launcher application menu is currently visible
-                property bool isPinned: hotspotTrigger.containsMouse || buttonArea.containsMouse || appLauncherModule.visible
+                hoverEnabled: true
+
+                property bool isPinned: hotspotTrigger.containsMouse || 
+                                        dockHitbox.containsMouse || 
+                                        appLauncherModule.launcherWindowObject.visible
 
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: isPinned ? 6 : -65
@@ -178,25 +188,90 @@ ShellRoot {
                     NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
                 }
 
-                color: buttonArea.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
-                Behavior on color { ColorAnimation { duration: 150 } }
-                
-                Text {
-                    anchors.centerIn: parent
-                    text: "apps" 
-                    font.family: "Material Symbols Outlined"
-                    font.pixelSize: 28
-                    
-                    // Stay visible if pinned open
-                    color: visualButton.isPinned ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.0)
-                    Behavior on color { ColorAnimation { duration: 180 } }
-                }
+                Row {
+                    id: visualDock
+                    spacing: 12
+                    anchors.centerIn: parent 
 
-                MouseArea {
-                    id: buttonArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: appLauncherModule.toggle()
+                    // --- BUTTON 1: APP LAUNCHER ---
+                    Rectangle {
+                        id: btnLauncher
+                        width: 55
+                        height: 55
+                        radius: 12
+                        color: mouseLauncher.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "apps"
+                            font.family: "Material Symbols Outlined"
+                            font.pixelSize: 26
+                            color: dockHitbox.isPinned ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.0)
+                            Behavior on color { ColorAnimation { duration: 180 } }
+                        }
+
+                        MouseArea {
+                            id: mouseLauncher
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            
+                            // Fixed: Control the state flag exposed on the Scope container directly
+                            onClicked: appLauncherModule.active = !appLauncherModule.active
+                        }
+                    }
+
+                    // --- BUTTON 2: WALLPAPER PICKER (STUB) ---
+                    Rectangle {
+                        id: btnWallpaper
+                        width: 55
+                        height: 55
+                        radius: 12
+                        color: mouseWallpaper.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "wallpaper"
+                            font.family: "Material Symbols Outlined"
+                            font.pixelSize: 26
+                            color: dockHitbox.isPinned ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.0)
+                            Behavior on color { ColorAnimation { duration: 180 } }
+                        }
+
+                        MouseArea {
+                            id: mouseWallpaper
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: console.log("Wallpaper Picker Action Triggered")
+                        }
+                    }
+
+                    // --- BUTTON 3: SCREENSHOT UTILITY (STUB) ---
+                    Rectangle {
+                        id: btnScreenshot
+                        width: 55
+                        height: 55
+                        radius: 12
+                        color: mouseScreenshot.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "screenshot_region"
+                            font.family: "Material Symbols Outlined"
+                            font.pixelSize: 26
+                            color: dockHitbox.isPinned ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.0)
+                            Behavior on color { ColorAnimation { duration: 180 } }
+                        }
+
+                        MouseArea {
+                            id: mouseScreenshot
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: console.log("Screenshot Tool Action Triggered")
+                        }
+                    }
                 }
             }
         }
