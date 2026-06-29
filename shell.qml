@@ -38,12 +38,19 @@ ShellRoot {
     }
 
     // --- REFACTORED MODULAR COMPONENTS ---
+    AppLauncher {
+        id: appLauncherModule
+    }
+
+    // Changed from WallpaperWindow to match the new file name
+    Wallpaper {
+        id: wallpaperWindowModule
+        rootShell: shellRoot
+    }
+
     Dock {
         id: desktopDock
         launcherModule: appLauncherModule
-    }
-
-    AppLauncher {
-        id: appLauncherModule
+        wallpaperModule: wallpaperWindowModule
     }
 }
