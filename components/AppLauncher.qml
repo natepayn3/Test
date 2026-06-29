@@ -16,7 +16,7 @@ Scope {
     FontConfig { id: fonts }
 
     // --- STREAMING THEME BRIDGES ---
-    property color themeBackground: Qt.rgba(0.06, 0.06, 0.06, 0.8) 
+    property color themeBackground: Qt.rgba(0.08, 0.08, 0.08, 0.9) 
     property color themeText: "#ffffff"
     property color themeAccent: Qt.rgba(1, 1, 1, 0.15) 
     property color themeBorder: Qt.rgba(1, 1, 1, 0.05)
@@ -157,7 +157,7 @@ Scope {
                 State { 
                     name: "hidden"
                     when: !launcherModuleRoot.active
-                    PropertyChanges { target: launcherCardFrame; opacity: 0.0; scale: 0.92 } 
+                    PropertyChanges { target: launcherCardFrame; opacity: 0.0; scale: 0.3 } 
                 },
                 State {
                     name: "shown"
@@ -168,22 +168,28 @@ Scope {
 
             transitions: [
                 Transition {
-                    from: "hidden"; to: "shown" 
+                    from: "hidden"
+                    to: "shown" 
                     ParallelAnimation {
-                        NumberAnimation { target: launcherCardFrame; property: "scale"; duration: 180; easing.type: Easing.OutCubic } 
-                        NumberAnimation { target: launcherCardFrame; property: "opacity"; duration: 150; easing.type: Easing.OutQuad } 
+                        NumberAnimation { 
+                            target: launcherCardFrame; 
+                            property: "scale"; 
+                            duration: 400; 
+                            easing.type: Easing.OutBack;
+                            easing.amplitude: 2.5 // Drastically increases the size of the overshoot/bounce
+                        } 
+                        NumberAnimation { target: launcherCardFrame; property: "opacity"; duration: 200; easing.type: Easing.OutQuad } 
                     }
                 },
                 Transition {
-                    from: "shown"; to: "hidden" 
+                    from: "shown"
+                    to: "hidden" 
                     SequentialAnimation {
                         ParallelAnimation {
-                            NumberAnimation { target: launcherCardFrame; property: "scale"; duration: 150; easing.type: Easing.InCubic } 
-                            NumberAnimation { target: launcherCardFrame; property: "opacity"; duration: 120; easing.type: Easing.InQuad } 
+                            NumberAnimation { target: launcherCardFrame; property: "scale"; duration: 200; easing.type: Easing.InBack; easing.amplitude: 1.5 } 
+                            NumberAnimation { target: launcherCardFrame; property: "opacity"; duration: 150; easing.type: Easing.InQuad } 
                         }
-                        ScriptAction {
-                            script: launcherWindow.visible = false
-                        } 
+                        ScriptAction { script: launcherWindow.visible = false } 
                     }
                 }
             ]
