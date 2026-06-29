@@ -22,23 +22,21 @@ PanelWindow {
     color: "transparent"
     exclusiveZone: 0
 
-    // Native multi-hitbox nesting using the default regions list property
     mask: Region {
-        // Keeps the bottom edge detection area permanently listening for mouse entry
-        Region {
-            item: hotspotTrigger
-        }
-        // Nesting a secondary conditional region inside the array matrix
-        Region {
-            item: dockHitbox.isPinned ? inputStabilizerCapsule : null
-        }
+        Region { item: hotspotTrigger }
+        Region { item: dockHitbox.isPinned ? inputStabilizerCapsule : null }
     }
 
-    // --- SYSTEM THEME MATRIX ---
     property color themeText: "#ffffff"
     property color themeBorder: Qt.rgba(1, 1, 1, 0.05)
     property color themeAccent: Qt.rgba(0.4, 0.4, 0.4, 0.28)
     property color hoverBorder: Qt.rgba(0, 0, 0, 0.2)
+
+    // Instantiate the engine popup object overlay
+    AudioPopup {
+        id: audioOverlay
+        visible: false
+    }
 
     MouseArea {
         id: dockHitbox
@@ -50,7 +48,8 @@ PanelWindow {
         property bool stableHover: hotspotTrigger.containsMouse ||
                                    innerCapsuleMouseTracker.containsMouse || 
                                    (dockWindow.launcherModule && dockWindow.launcherModule.launcherWindowObject && dockWindow.launcherModule.launcherWindowObject.visible) ||
-                                   (dockWindow.wallpaperModule && dockWindow.wallpaperModule.active)
+                                   (dockWindow.wallpaperModule && dockWindow.wallpaperModule.active) ||
+                                   audioOverlay.visible
 
         property bool isPinned: false
 
@@ -63,7 +62,6 @@ PanelWindow {
             }
         }
 
-        // Bottom edge pop-up trigger area clamped strictly to dock width
         MouseArea {
             id: hotspotTrigger
             width: parent.width - 4
@@ -146,9 +144,9 @@ PanelWindow {
                     }
                 }
 
-                // --- BUTTON 3: SCREENSHOT UTILITY ---
+                // --- BUTTON 3: AUDIO OUTPUT ROUTER ---
                 Item {
-                    id: btnScreenshot
+                    id: btnAudio
                     width: 64
                     height: 64
 
@@ -157,6 +155,33 @@ PanelWindow {
                         radius: 12
                         color: dockHitbox.activeHoverIndex === 2 ? dockWindow.themeAccent : "transparent"
                         border.color: dockHitbox.activeHoverIndex === 2 ? dockWindow.hoverBorder : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "volume_up"
+                        font.family: "Material Symbols Outlined"
+                        font.pixelSize: 32
+                        style: Text.Outline
+                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+                        color: dockHitbox.isPinned ? Qt.rgba(dockWindow.themeText.r, dockWindow.themeText.g, dockWindow.themeText.b, 0.9) : "transparent"
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+                }
+
+                // --- BUTTON 4: SCREENSHOT UTILITY ---
+                Item {
+                    id: btnScreenshot
+                    width: 64
+                    height: 64
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 12
+                        color: dockHitbox.activeHoverIndex === 3 ? dockWindow.themeAccent : "transparent"
+                        border.color: dockHitbox.activeHoverIndex === 3 ? dockWindow.hoverBorder : "transparent"
                         border.width: 1
                         Behavior on color { ColorAnimation { duration: 150 } }
                     }
@@ -181,12 +206,12 @@ PanelWindow {
                 cursorShape: dockHitbox.activeHoverIndex !== -1 ? Qt.PointingHandCursor : Qt.ArrowCursor
 
                 onPositionChanged: (mouse) => {
-                    let adjustedX = mouse.x - 12; 
+                    let adjustedX = mouse.x - 12;
                     let totalCellWidth = 80; 
                     let calculatedIndex = Math.floor(adjustedX / totalCellWidth);
                     let localX = adjustedX % totalCellWidth;
-                    
-                    if (calculatedIndex >= 0 && calculatedIndex <= 2 && localX <= 64 && adjustedX >= 0) {
+                    // Upper bound matched to new 4-item index matrix (0 through 3)
+                    if (calculatedIndex >= 0 && calculatedIndex <= 3 && localX <= 64 && adjustedX >= 0) {
                         dockHitbox.activeHoverIndex = calculatedIndex;
                     } else {
                         dockHitbox.activeHoverIndex = -1;
@@ -203,6 +228,8 @@ PanelWindow {
                             dockWindow.wallpaperModule.active = !dockWindow.wallpaperModule.active;
                         }
                     } else if (dockHitbox.activeHoverIndex === 2) {
+                        audioOverlay.visible = !audioOverlay.visible;
+                    } else if (dockHitbox.activeHoverIndex === 3) {
                         dockHitbox.isPinned = false;
                         Quickshell.execDetached(["bash", "-c", "sleep 0.1 && grim -g \"$(slurp)\" -t ppm - | satty --filename -"]);
                     }
