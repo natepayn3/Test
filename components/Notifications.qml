@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Services.Notifications
 
 Column {
     id: notifRoot
@@ -11,7 +10,8 @@ Column {
         font.family: "Google Sans Flex"
         font.pixelSize: 13
         font.weight: Font.Bold
-        visible: notifRepeater.count > 0
+        // Bind to the model arriving from Dashboard.qml
+        visible: dashboardWindow.notificationModel && dashboardWindow.notificationModel.length > 0
     }
 
     Column {
@@ -20,7 +20,8 @@ Column {
 
         Repeater {
             id: notifRepeater
-            model: notifServer.trackedNotifications.values
+            // Bind view directly to the global stream wrapper data
+            model: dashboardWindow.notificationModel
 
             delegate: Rectangle {
                 width: parent.width
@@ -63,12 +64,6 @@ Column {
         font.pixelSize: 12
         width: parent.width
         horizontalAlignment: Text.AlignHCenter
-        visible: notifRepeater.count === 0
-    }
-
-    NotificationServer {
-        id: notifServer
-        bodySupported: true
-        actionsSupported: false
+        visible: !dashboardWindow.notificationModel || dashboardWindow.notificationModel.length === 0
     }
 }

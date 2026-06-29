@@ -380,7 +380,7 @@ PanelWindow {
                                     source: glowOutline
                                     shadowEnabled: true
                                     shadowColor: rootShell.primaryColor ? Qt.color(rootShell.primaryColor) : "#ffffff"
-                                    shadowBlur: 0.6
+                                    shadowBlur: 0
                                     shadowVerticalOffset: 0
                                     shadowHorizontalOffset: 0
                                 }

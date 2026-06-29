@@ -22,9 +22,18 @@ PanelWindow {
     color: "transparent"
     exclusiveZone: 0
 
+    Item {
+        id: staticMaskSurface
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 120 
+    }
+
     mask: Region {
-        Region { item: hotspotTrigger }
-        Region { item: dockHitbox.isPinned ? inputStabilizerCapsule : null }
+        Region {
+            item: staticMaskSurface
+        }
     }
 
     property color themeText: "#ffffff"
@@ -50,19 +59,25 @@ PanelWindow {
 
         property int activeHoverIndex: -1
 
-        property bool stableHover: hotspotTrigger.containsMouse ||
-                                   innerCapsuleMouseTracker.containsMouse || 
-                                   (dockWindow.launcherModule && dockWindow.launcherModule.launcherWindowObject && dockWindow.launcherModule.launcherWindowObject.visible) ||
-                                   (dockWindow.wallpaperModule && dockWindow.wallpaperModule.active) ||
-                                   bluetoothOverlay.visible ||
-                                   audioOverlay.visible
+        property bool stableHover: hotspotTrigger.containsMouse || 
+                           innerCapsuleMouseTracker.containsMouse || 
+                           (dockWindow.launcherModule && dockWindow.launcherModule.launcherWindowObject && dockWindow.launcherModule.launcherWindowObject.visible) ||
+                           bluetoothOverlay.visible ||
+                           audioOverlay.visible
 
         property bool isPinned: false
 
         onStableHoverChanged: {
             if (stableHover) {
                 dismissTimer.stop();
-                isPinned = true;
+                
+                if (dockWindow.wallpaperModule && dockWindow.wallpaperModule.active) {
+                    if (dockWindow.wallpaperModule.screen === dockWindow.screen) {
+                        isPinned = true;
+                    }
+                } else {
+                    isPinned = true;
+                }
             } else {
                 dismissTimer.start();
             }

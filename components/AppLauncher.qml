@@ -196,219 +196,235 @@ Scope {
             ]
 
             // --- VISUAL LAYER SYSTEM ---
-            // Separated geometry from layout so MultiEffect shadow can map bounds cleanly
+            // Removed border and antialiasing from the source plane to avoid shadow mask bleeding
             Rectangle {
                 id: cardMainBody 
                 anchors.fill: parent
                 color: launcherModuleRoot.themeBackground
-                border.color: launcherModuleRoot.cardBorder
-                border.width: 1
                 radius: 16 
-                antialiasing: true
-                visible: false // Hidden because it feeds directly into the MultiEffect source plane below
+                visible: false 
             }
 
-            // Universal hardware shadow overlay engine to cleanly segment the launcher card over pure white applications
+            // Universal hardware shadow overlay engine
             MultiEffect {
+                id: cardShadow
                 anchors.fill: cardMainBody
                 source: cardMainBody
                 shadowEnabled: true
                 shadowColor: Qt.rgba(0, 0, 0, 0.35)
-                shadowBlur: 0.7
-                shadowVerticalOffset: 4
+                shadowBlur: 0
+                shadowVerticalOffset: 0
                 shadowHorizontalOffset: 0
             }
 
-            Item {
+            // Independent border overlay rendered safely above the shadow plane
+            Rectangle {
+                id: cardBorderOverlay
+                anchors.fill: parent
+                color: "transparent"
+                border.color: launcherModuleRoot.cardBorder
+                border.width: 1
+                radius: 16
+                antialiasing: true
+            }
+
+            Rectangle {
                 id: layoutContentWrapper 
                 anchors.fill: parent
-                anchors.margins: 20 
+                color: "transparent"
+                radius: 16
+                clip: true
 
-                ColumnLayout {
+                Item {
                     anchors.fill: parent
-                    spacing: 12 
+                    anchors.margins: 20 
 
-                    TextField {
-                        id: searchInput
-                        Layout.fillWidth: true 
-                        Layout.preferredHeight: 46 
-                        placeholderText: "Search apps..."
-                        
-                        font.family: fonts.mainFont
-                        font.pixelSize: 20 
-                        renderType: fonts.preferredRenderType
-                        antialiasing: fonts.useAntialiasing
-                        
-                        color: launcherModuleRoot.themeText
-                        placeholderTextColor: Qt.rgba(1, 1, 1, 0.3)
-                        selectByMouse: true
-                        verticalAlignment: TextInput.AlignVCenter 
-                        
-                        background: Rectangle { 
-                            color: Qt.rgba(0, 0, 0, 0.15) // Down-tints input matrix box cleanly
-                            border.color: searchInput.activeFocus ? launcherModuleRoot.themeAccent : launcherModuleRoot.themeBorder 
-                            border.width: 1
-                            radius: 10 
-                        }
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 12 
 
-                        onTextChanged: launcherWindow.updateModel() 
+                        TextField {
+                            id: searchInput
+                            Layout.fillWidth: true 
+                            Layout.preferredHeight: 46 
+                            placeholderText: "Search apps..."
+                            
+                            font.family: fonts.mainFont
+                            font.pixelSize: 20 
+                            renderType: fonts.preferredRenderType
+                            antialiasing: fonts.useAntialiasing
+                            
+                            color: launcherModuleRoot.themeText
+                            placeholderTextColor: Qt.rgba(1, 1, 1, 0.3)
+                            selectByMouse: true
+                            verticalAlignment: TextInput.AlignVCenter 
+                            
+                            background: Rectangle { 
+                                color: Qt.rgba(0, 0, 0, 0.15) // Down-tints input matrix box cleanly
+                                border.color: searchInput.activeFocus ? launcherModuleRoot.themeAccent : launcherModuleRoot.themeBorder 
+                                border.width: 1
+                                radius: 10 
+                            }
 
-                        Keys.onPressed: (event) => {
-                            if (event.key === Qt.Key_Down) {
-                                appListView.incrementCurrentIndex(); 
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Up) {
-                                appListView.decrementCurrentIndex();
-                                event.accepted = true; 
-                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                if (appListView.currentItem) {
-                                    launcherWindow.launchApp(appListView.currentItem.appExec);
-                                } 
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Escape) { 
-                                launcherModuleRoot.closeRequested();
-                                event.accepted = true; 
+                            onTextChanged: launcherWindow.updateModel() 
+
+                            Keys.onPressed: (event) => {
+                                if (event.key === Qt.Key_Down) {
+                                    appListView.incrementCurrentIndex(); 
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Up) {
+                                    appListView.decrementCurrentIndex();
+                                    event.accepted = true; 
+                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    if (appListView.currentItem) {
+                                        launcherWindow.launchApp(appListView.currentItem.appExec);
+                                    } 
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Escape) { 
+                                    launcherModuleRoot.closeRequested();
+                                    event.accepted = true; 
+                                }
                             }
                         }
-                    }
 
-                    ScrollView {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true 
-                        clip: true
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true 
+                            clip: true
 
-                        ListView {
-                            id: appListView
-                            spacing: 4 
-                            keyNavigationEnabled: false
-                            model: launcherWindow.filteredApps 
-                            
-                            delegate: ItemDelegate {
-                                id: appDelegate
-                                width: appListView.width 
-                                height: 56 
-                                highlighted: appListView.currentIndex === index 
+                            ListView {
+                                id: appListView
+                                spacing: 4 
+                                keyNavigationEnabled: false
+                                model: launcherWindow.filteredApps 
                                 
-                                property string appExec: modelData.exec
-                                property bool isPinned: launcherWindow.localPins.includes(modelData.path)
+                                delegate: ItemDelegate {
+                                    id: appDelegate
+                                    width: appListView.width 
+                                    height: 56 
+                                    highlighted: appListView.currentIndex === index 
+                                    
+                                    property string appExec: modelData.exec
+                                    property bool isPinned: launcherWindow.localPins.includes(modelData.path)
 
-                                background: Rectangle { 
-                                    // Matched completely to dock module background design structures
-                                    color: appDelegate.highlighted
-                                        ? launcherModuleRoot.themeAccent 
-                                        : (appDelegate.hovered ? Qt.rgba(1, 1, 1, 0.05) : "transparent")
-                                    border.color: appDelegate.highlighted ? launcherModuleRoot.cardBorder : "transparent"
-                                    border.width: 1
-                                    radius: 10 
-                                } 
-
-                                contentItem: RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 10 
-                                    spacing: 12
-
-                                    Image { 
-                                        Layout.preferredWidth: 28 
-                                        Layout.preferredHeight: 28
-                                        sourceSize.width: 56 
-                                        sourceSize.height: 56
-                                        source: Quickshell.iconPath(modelData.icon !== "" ? modelData.icon : "application-x-executable") 
-                                        fillMode: Image.PreserveAspectFit
-                                        asynchronous: true
+                                    background: Rectangle { 
+                                        // Matched completely to dock module background design structures
+                                        color: appDelegate.highlighted
+                                            ? launcherModuleRoot.themeAccent 
+                                            : (appDelegate.hovered ? Qt.rgba(1, 1, 1, 0.05) : "transparent")
+                                        border.color: appDelegate.highlighted ? launcherModuleRoot.cardBorder : "transparent"
+                                        border.width: 1
+                                        radius: 10 
                                     } 
 
-                                    ColumnLayout {
-                                        Layout.fillWidth: true 
-                                        spacing: 1
-                                        Layout.alignment: Qt.AlignVCenter 
+                                    contentItem: RowLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 10 
+                                        spacing: 12
 
-                                        Text { 
-                                            text: modelData.name
-                                            font.family: fonts.mainFont 
-                                            font.pixelSize: 16
-                                            style: Text.Outline
-                                            styleColor: Qt.rgba(0, 0, 0, 0.45) // Outline shield locks readable contrast over pure white apps
-                                            color: launcherModuleRoot.themeText 
-                                            font.weight: appDelegate.isPinned ? Font.Bold : Font.Normal 
+                                        Image { 
+                                            Layout.preferredWidth: 28 
+                                            Layout.preferredHeight: 28
+                                            sourceSize.width: 56 
+                                            sourceSize.height: 56
+                                            source: Quickshell.iconPath(modelData.icon !== "" ? modelData.icon : "application-x-executable") 
+                                            fillMode: Image.PreserveAspectFit
+                                            asynchronous: true
+                                        } 
+
+                                        ColumnLayout {
+                                            Layout.fillWidth: true 
+                                            spacing: 1
+                                            Layout.alignment: Qt.AlignVCenter 
+
+                                            Text { 
+                                                text: modelData.name
+                                                font.family: fonts.mainFont 
+                                                font.pixelSize: 16
+                                                style: Text.Outline
+                                                styleColor: Qt.rgba(0, 0, 0, 0.45) // Outline shield locks readable contrast over pure white apps
+                                                color: launcherModuleRoot.themeText 
+                                                font.weight: appDelegate.isPinned ? Font.Bold : Font.Normal 
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                                renderType: fonts.preferredRenderType 
+                                                antialiasing: fonts.useAntialiasing 
+                                            }
+
+                                            Text {
+                                                text: modelData.desc !== "" ? modelData.desc : "Application" 
+                                                font.family: fonts.mainFont
+                                                font.pixelSize: 14
+                                                style: Text.Outline
+                                                styleColor: Qt.rgba(0, 0, 0, 0.3)
+                                                color: Qt.rgba(1, 1, 1, 0.5) 
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight 
+                                                renderType: fonts.preferredRenderType
+                                                antialiasing: fonts.useAntialiasing 
+                                            }
+                                        }
+
+                                        Item {
                                             Layout.fillWidth: true
-                                            elide: Text.ElideRight
-                                            renderType: fonts.preferredRenderType 
-                                            antialiasing: fonts.useAntialiasing 
                                         }
 
                                         Text {
-                                            text: modelData.desc !== "" ? modelData.desc : "Application" 
-                                            font.family: fonts.mainFont
-                                            font.pixelSize: 14
+                                            text: "keep" 
+                                            font.family: fonts.iconFont
+                                            font.pixelSize: 18
                                             style: Text.Outline
-                                            styleColor: Qt.rgba(0, 0, 0, 0.3)
-                                            color: Qt.rgba(1, 1, 1, 0.5) 
-                                            Layout.fillWidth: true
-                                            elide: Text.ElideRight 
+                                            styleColor: Qt.rgba(0, 0, 0, 0.4)
+                                            color: launcherModuleRoot.themeText
+                                            visible: appDelegate.isPinned 
+                                            Layout.alignment: Qt.AlignVCenter
+                                            Layout.rightMargin: 4
                                             renderType: fonts.preferredRenderType
-                                            antialiasing: fonts.useAntialiasing 
+                                            antialiasing: fonts.useAntialiasing
                                         }
-                                    }
+                                    } 
 
-                                    Item {
-                                        Layout.fillWidth: true
-                                    }
+                                    MouseArea {
+                                        anchors.fill: parent 
+                                        acceptedButtons: Qt.LeftButton | Qt.RightButton 
+                                        cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
 
-                                    Text {
-                                        text: "keep" 
-                                        font.family: fonts.iconFont
-                                        font.pixelSize: 18
-                                        style: Text.Outline
-                                        styleColor: Qt.rgba(0, 0, 0, 0.4)
-                                        color: launcherModuleRoot.themeText
-                                        visible: appDelegate.isPinned 
-                                        Layout.alignment: Qt.AlignVCenter
-                                        Layout.rightMargin: 4
-                                        renderType: fonts.preferredRenderType
-                                        antialiasing: fonts.useAntialiasing
-                                    }
-                                } 
+                                        property int lastScreenX: -1 
+                                        property int lastScreenY: -1
 
-                                MouseArea {
-                                    anchors.fill: parent 
-                                    acceptedButtons: Qt.LeftButton | Qt.RightButton 
-                                    cursorShape: Qt.PointingHandCursor
-                                    hoverEnabled: true
+                                        onPositionChanged: (mouse) => { 
+                                            let currentX = Math.floor(mouse.screenX);
+                                            let currentY = Math.floor(mouse.screenY);
 
-                                    property int lastScreenX: -1 
-                                    property int lastScreenY: -1
-
-                                    onPositionChanged: (mouse) => { 
-                                        let currentX = Math.floor(mouse.screenX);
-                                        let currentY = Math.floor(mouse.screenY);
-
-                                        let deltaX = Math.abs(currentX - lastScreenX); 
-                                        let deltaY = Math.abs(currentY - lastScreenY);
-                                        if (lastScreenX !== -1 && (deltaX > 2 || deltaY > 2)) {
-                                            if (appListView.currentIndex !== index) { 
-                                                appListView.currentIndex = index;
+                                            let deltaX = Math.abs(currentX - lastScreenX); 
+                                            let deltaY = Math.abs(currentY - lastScreenY);
+                                            if (lastScreenX !== -1 && (deltaX > 2 || deltaY > 2)) {
+                                                if (appListView.currentIndex !== index) { 
+                                                    appListView.currentIndex = index;
+                                                }
                                             }
+                                            
+                                            lastScreenX = currentX;
+                                            lastScreenY = currentY; 
                                         }
-                                        
-                                        lastScreenX = currentX;
-                                        lastScreenY = currentY; 
-                                    }
 
-                                    onExited: {
-                                        lastScreenX = -1;
-                                        lastScreenY = -1; 
-                                    }
+                                        onExited: {
+                                            lastScreenX = -1;
+                                            lastScreenY = -1; 
+                                        }
 
-                                    onClicked: (mouse) => {
-                                        if (mouse.button === Qt.RightButton) {
-                                            launcherWindow.togglePin(modelData.path);
-                                        } else { 
-                                            launcherWindow.launchApp(modelData.exec);
+                                        onClicked: (mouse) => {
+                                            if (mouse.button === Qt.RightButton) {
+                                                launcherWindow.togglePin(modelData.path);
+                                            } else { 
+                                                launcherWindow.launchApp(modelData.exec);
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } 
+                            } 
+                        }
                     }
                 }
             }

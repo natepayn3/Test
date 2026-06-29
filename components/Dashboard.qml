@@ -7,6 +7,8 @@ import Quickshell.Wayland
 PanelWindow {
     id: dashboardWindow
 
+    property var notificationModel: []
+
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-resource-dashboard"
     WlrLayershell.keyboardFocus: WlrLayershell.None
