@@ -101,8 +101,9 @@ Item {
             font.pixelSize: 18
             color: Qt.rgba(1, 1, 1, 0.4)
             anchors.left: parent.left
-            anchors.leftMargin: 16
+            anchors.leftMargin: 15
             anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: parent.horizontalCenter
             Component.onCompleted: fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.35))
         }
 
@@ -125,6 +126,7 @@ Item {
                 color: Qt.rgba(0, 0, 0, 0.75)
                 x: 16
                 anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
                 Component.onCompleted: fc.applySmoothing(this)
             }
         }
