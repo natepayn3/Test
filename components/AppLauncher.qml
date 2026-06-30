@@ -222,8 +222,6 @@ Scope {
                 id: cardBorderOverlay
                 anchors.fill: parent
                 color: "transparent"
-                border.color: launcherModuleRoot.cardBorder
-                border.width: 1
                 radius: 16
                 antialiasing: true
             }
