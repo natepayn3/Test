@@ -21,31 +21,26 @@ Item {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            batteryCapacityReader.reload()
-            batteryStatusReader.reload()
+            batteryFetcher.running = true
         }
     }
 
-    FileView {
-        id: batteryCapacityReader
-        path: "/sys/class/power_supply/BAT0/capacity"
-        onTextChanged: {
-            let txt = text().trim()
-            if (txt) {
-                batterySliderRoot.batteryCapacity = parseInt(txt)
-                batterySliderRoot.batteryAvailable = true
-            }
-        }
-    }
-
-    FileView {
-        id: batteryStatusReader
-        path: "/sys/class/power_supply/BAT0/status"
-        onTextChanged: {
-            let txt = text().trim()
-            if (txt) {
-                batterySliderRoot.batteryCharging = (txt === "Charging")
-                batterySliderRoot.batteryAvailable = true
+    // Consolidated process to read stats safely without console spam
+    Process {
+        id: batteryFetcher
+        command: ["sh", "-c", "if [ -d /sys/class/power_supply/BAT0 ]; then echo \"OK\"; cat /sys/class/power_supply/BAT0/capacity; cat /sys/class/power_supply/BAT0/status; else echo \"MISSING\"; fi 2>/dev/null"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let lines = this.text.trim().split("\n")
+                if (lines.length >= 3 && lines[0] === "OK") {
+                    batterySliderRoot.batteryCapacity = parseInt(lines[1])
+                    batterySliderRoot.batteryCharging = (lines[2] === "Charging")
+                    batterySliderRoot.batteryAvailable = true
+                } else {
+                    batterySliderRoot.batteryAvailable = false
+                }
+                batteryFetcher.running = false
             }
         }
     }

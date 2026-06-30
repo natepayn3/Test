@@ -11,7 +11,7 @@ Item {
     property real currentBrightness: 0.0
     property string percentageText: hasHardware ? Math.round(brightnessSliderRoot.currentBrightness * 100) + "%" : "No Backlight"
 
-    // Promotes the dimmed state layout modification to the top container
+    // Unified opacity scaling applied to the root frame
     opacity: hasHardware ? 1.0 : 0.5
 
     Component.onCompleted: brightFetcher.running = true
@@ -118,24 +118,28 @@ Item {
     
     Process {
         id: brightFetcher
-        command: ["sh", "-c", "echo $(brightnessctl get 2>/dev/null || echo 0) $(brightnessctl max 2>/dev/null || echo 0)"]
+        // First strictly verifies if a non-empty backlight class folder exists, then queries metrics
+        command: ["sh", "-c", "if [ -d /sys/class/backlight ] && [ \"$(ls -A /sys/class/backlight 2>/dev/null)\" ]; then echo \"OK\"; echo $(brightnessctl get) $(brightnessctl max); else echo \"MISSING\"; fi 2>/dev/null"]
         running: false
         stdout: StdioCollector {
             onStreamFinished: {
-                let parts = this.text.trim().split(" ");
-                if (parts.length >= 2) {
-                    let current = parseFloat(parts[0]);
-                    let max = parseFloat(parts[1]);
-                    if (max > 0) {
-                        brightnessSliderRoot.currentBrightness = current / max;
-                        brightnessSliderRoot.hasHardware = true;
-                    } else {
-                        brightnessSliderRoot.hasHardware = false;
+                let lines = this.text.trim().split("\n")
+                if (lines.length >= 2 && lines[0] === "OK") {
+                    let parts = lines[1].split(" ")
+                    if (parts.length >= 2) {
+                        let current = parseFloat(parts[0])
+                        let max = parseFloat(parts[1])
+                        if (max > 0) {
+                            brightnessSliderRoot.currentBrightness = current / max
+                            brightnessSliderRoot.hasHardware = true
+                        } else {
+                            brightnessSliderRoot.hasHardware = false
+                        }
                     }
                 } else {
-                    brightnessSliderRoot.hasHardware = false;
+                    brightnessSliderRoot.hasHardware = false
                 }
-                brightFetcher.running = false;
+                brightFetcher.running = false
             }
         }
     }
