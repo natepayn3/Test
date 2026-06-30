@@ -32,7 +32,7 @@ Item {
     property real radiusValue: shellConfig.radiusValue
 
     // Dynamically expand root width to tightly match the workspace stream aspect bounds plus side paddings
-    property real maxCardWidth: viewportFrame.width + 68
+    property real maxCardWidth: viewportFrame.width + 74
     property real maxCardHeight: viewportFrame.calculatedBounds.isVertical ? 500 : 270
 
     implicitWidth: Math.round(maxCardWidth)
@@ -156,7 +156,7 @@ Item {
             color: previewRoot.colorBackground
             //style: Text.Outline
             styleColor: colorBackground
-            z: 3
+            z: 1
             anchors.bottom: cardMainBody.top
             anchors.horizontalCenter: cardMainBody.horizontalCenter
             anchors.bottomMargin: -28
@@ -223,7 +223,7 @@ Item {
                     spacing: 16
 
                     Text {
-                        text: "menu"
+                        text: "clock_loader_10"
                         font {
                             family: "Material Symbols Outlined"
                             pixelSize: 30
@@ -232,6 +232,13 @@ Item {
                         style: Text.Outline
                         styleColor: Qt.rgba(0, 0, 0, 0.35)
                         anchors.horizontalCenter: parent.horizontalCenter
+                        width: 30
+                        height: 30
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+
+                        // Direct, zero-overhead horizontal mirror
+                        rotation: -45
                     }
 
                     Text {
@@ -244,10 +251,17 @@ Item {
                         style: Text.Outline
                         styleColor: Qt.rgba(0, 0, 0, 0.35)
                         anchors.horizontalCenter: parent.horizontalCenter
+                        width: 30
+                        height: 30
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+
+                        // Direct, zero-overhead horizontal mirror
+                        rotation: 45
                     }
 
                     Text {
-                        text: "clock_loader_40"
+                        text: "density_small"
                         font {
                             family: "Material Symbols Outlined"
                             pixelSize: 30
