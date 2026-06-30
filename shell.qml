@@ -11,7 +11,6 @@ ShellRoot {
     property bool audioPopupActive: false
     property var activeNotifications: []
 
-    // 🎯 The secure pipeline object that bridges the window gap
     QtObject {
         id: notifBroadcaster
         signal broadcast(string summary, string body)
@@ -26,7 +25,6 @@ ShellRoot {
         actionsSupported: false
         
         onNotification: (notification) => {
-            // Send pure strings down the pipe to avoid garbage collection drops
             notifBroadcaster.broadcast(notification.summary, notification.body);
         }
     }
