@@ -24,8 +24,7 @@ QtObject {
     function applyOutline(targetTextElement, outlineColor) {
         if (targetTextElement) {
             targetTextElement.style = Text.Outline;
-            // 🎯 Matches your preferred soft 0.35 alpha opacity look by default
-            targetTextElement.styleColor = outlineColor !== undefined ? outlineColor : Qt.rgba(0, 0, 0, 0.35);
+            targetTextElement.styleColor = outlineColor !== undefined ? outlineColor : Qt.rgba(0, 0, 0, 0.45);
             targetTextElement.renderType = preferredRenderType;
             targetTextElement.antialiasing = useAntialiasing;
         }
