@@ -17,6 +17,8 @@ ShellRoot {
         signal broadcast(string summary, string body)
     }
 
+    ModuleConfig { id: shellConfig }
+
     AppLauncher { id: appLauncherModule }
     Wallpaper { id: wallpaperWindowModule; rootShell: shellRoot }
 
