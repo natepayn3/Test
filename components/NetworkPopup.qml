@@ -157,6 +157,34 @@ PanelWindow {
             border.width: 1
             radius: shellConfig.radiusValue
 
+            Text {
+                id: leftNetworkIcon
+                text: "downloading"
+                font.family: fc.iconFont
+                font.pixelSize: 150
+                color: shellConfig.colorBackground
+                styleColor: colorBackground
+             
+                anchors.right: parent.left
+                anchors.rightMargin: -5
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: 0
+            }
+
+            Text {
+                id: rightNetworkIcon
+                text: "arrow_upload_progress"
+                font.family: fc.iconFont
+                font.pixelSize: 150
+                color: shellConfig.colorBackground
+                styleColor: colorBackground
+
+                anchors.left: parent.right
+                anchors.leftMargin: -5
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: 0
+            }
+
             states: [
                 State {
                     name: "hidden"
