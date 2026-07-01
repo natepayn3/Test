@@ -155,7 +155,7 @@ Scope {
                 id: leftAppIcon
                 text: "terminal_2"
                 font.family: fc.iconFont
-                font.pixelSize: 100
+                font.pixelSize: 125
                 color: launcherModuleRoot.themeBackground
                 styleColor: colorBackground
                 anchors.right: parent.left
@@ -169,7 +169,7 @@ Scope {
                 id: rightAppIcon
                 text: "terminal_2"
                 font.family: fc.iconFont
-                font.pixelSize: 100
+                font.pixelSize: 125
                 color: launcherModuleRoot.themeBackground
                 styleColor: colorBackground
                 anchors.left: parent.right
