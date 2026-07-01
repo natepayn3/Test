@@ -162,7 +162,7 @@ PanelWindow {
 
             Text {
                 id: leftNetworkIcon
-                text: "south"
+                text: "arrow_cool_down"
                 font.family: fc.iconFont
                 font.pixelSize: 125
                 color: shellConfig.colorBackground
@@ -176,7 +176,7 @@ PanelWindow {
 
             Text {
                 id: rightNetworkIcon
-                text: "north"
+                text: "arrow_warm_up"
                 font.family: fc.iconFont
                 font.pixelSize: 125
                 color: shellConfig.colorBackground
@@ -472,7 +472,7 @@ PanelWindow {
 
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: "Select WireGuard Config:"; font.family: shellConfig.shellFont; font.pixelSize: 14; font.bold: true; color: shellConfig.themeText; Layout.fillWidth: true; style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.35) }
+                        Text { text: "Select VPN config:"; font.family: shellConfig.shellFont; font.pixelSize: 14; font.bold: true; color: shellConfig.themeText; Layout.fillWidth: true; style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.35) }
                         Button {
                             id: cancelBtn; flat: true; implicitWidth: 70; implicitHeight: 28
                             background: Rectangle { color: cancelBtn.hovered ? Qt.rgba(0.4, 0.4, 0.4, 0.28) : "transparent"; border.color: cancelBtn.hovered ? Qt.rgba(0, 0, 0, 0.2) : "transparent"; border.width: 1; radius: 6 }
@@ -497,8 +497,15 @@ PanelWindow {
                                 anchors.margins: 6
                                 spacing: 4
                                 clip: true
-                                model: FolderListModel { id: folderModel; folder: networkPopupWindow.currentBrowserPath; showDirsFirst: true; showDotAndDotDot: true; nameFilters: ["*.conf"] }
-
+                                model: FolderListModel {
+                                    id: folderModel
+                                    folder: networkPopupWindow.currentBrowserPath
+                                    showDirsFirst: true
+                                    showDotAndDotDot: true
+                                    
+                                    // EXPANDED FILTER: Tells the layout engine to reveal all target profile types
+                                    nameFilters: ["*.conf", "*.ovpn", "*.vpn"] 
+                                }
                                 delegate: MouseArea {
                                     id: fileDelegateItem; width: fileListView.width; height: fileName === "." ? 0 : 34; visible: fileName !== "."
                                     hoverEnabled: true
@@ -525,7 +532,7 @@ PanelWindow {
                                         } else {
                                             let urlString = fileUrl.toString();
                                             let parsedPath = urlString.startsWith("file:///") ? urlString.substring(7) : urlString.replace("file://", "");
-                                            vpnImporter.command = ["bash", "-c", "nmcli connection import type wireguard file '" + parsedPath + "' || echo 'QS_IMPORT_FAILED' >&2"];
+                                            vpnImporter.command = ["bash", "-c", "nmcli connection import file '" + parsedPath + "' || echo 'QS_IMPORT_FAILED' >&2"];
                                             vpnImporter.running = true;
                                             networkPopupWindow.showFileBrowser = false;
                                         }
@@ -558,6 +565,7 @@ PanelWindow {
         id: vpnListPopulator
         command: ["nmcli", "-g", "TYPE,NAME,STATE", "connection", "show"]
         running: false
+        
         stdout: StdioCollector {
             onTextChanged: {
                 let cleanText = text.trim();
@@ -570,7 +578,9 @@ PanelWindow {
                     let parts = lines[i].trim().split(":");
                     if (parts.length >= 2) {
                         let type = parts[0], name = parts[1], state = parts[2] || "";
-                        if (type === "wireguard" || type === "vpn" || type === "tun") {
+                        
+                        // EXPANDED FILTER: Captures standard wireguard, generic VPNs, tun links, and raw virtual devices
+                        if (type === "wireguard" || type === "vpn" || type === "tun" || type === "overlay" || type === "connection") {
                             if (state.indexOf("activated") !== -1) currentActive = name;
                             if (incomingProfiles.indexOf(name) === -1) incomingProfiles.push(name);
                         }
