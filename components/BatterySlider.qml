@@ -13,38 +13,33 @@ Item {
     property bool batteryCharging: false
     
     // Status text generation logic
-    property string statusText: !batteryAvailable ? "" : (batteryCharging ? "Charging" : (batteryCapacity >= 95 ? "Charged" : "Discharging"))
-    property string combinedText: batteryAvailable ? batteryCapacity + "% • " + statusText : "No Battery"
+    property string statusText: !batteryAvailable ?
+ "" : (batteryCharging ? "Charging" : (batteryCapacity >= 99 ? "Charged" : "Discharging"))
+    property string combinedText: batteryAvailable ?
+ batteryCapacity + "% • " + statusText : "No Battery"
 
     FontConfig { id: fc }
 
-    Timer {
-        id: statPoller
-        interval: 3000
-        running: batterySliderRoot.visible // Production polling activated on visibility
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            batteryFetcher.running = true
-        }
-    }
-
+    // Persistent background process with zero timers
     Process {
         id: batteryFetcher
-        // Iterates through expected battery directories, grabs metrics from the first one found, then exits the loop
-        command: ["sh", "-c", "for b in BAT0 BAT1; do if [ -d /sys/class/power_supply/$b ]; then echo \"OK\"; cat /sys/class/power_supply/$b/capacity; cat /sys/class/power_supply/$b/status; exit 0; fi; done; echo \"MISSING\""]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                let lines = this.text.trim().split("\n")
-                if (lines.length >= 3 && lines[0] === "OK") {
-                    batterySliderRoot.batteryCapacity = parseInt(lines[1])
-                    batterySliderRoot.batteryCharging = (lines[2] === "Charging")
-                    batterySliderRoot.batteryAvailable = true
+        // Enclosing the work in a function and invoking it before entering the loop eliminates the startup delay
+        command: ["sh", "-c", "fetch() { for b in BAT0 BAT1; do if [ -d /sys/class/power_supply/$b ]; then cap=$(cat /sys/class/power_supply/$b/capacity); stat=$(cat /sys/class/power_supply/$b/status); echo \"$cap;$stat\"; break; fi; done; }; fetch; while true; do sleep 30; fetch; done"]
+        running: batterySliderRoot.visible
+        
+        stdout: SplitParser {
+            onRead: data => {
+                let cleanData = data.trim();
+                if (cleanData === "") return;
+
+                let segments = cleanData.split(";");
+                if (segments.length === 2) {
+                    batterySliderRoot.batteryCapacity = parseInt(segments[0]);
+                    batterySliderRoot.batteryCharging = (segments[1] === "Charging");
+                    batterySliderRoot.batteryAvailable = true;
                 } else {
-                    batterySliderRoot.batteryAvailable = false
+                    batterySliderRoot.batteryAvailable = false;
                 }
-                batteryFetcher.running = false
             }
         }
     }
@@ -57,6 +52,7 @@ Item {
         border.color: Qt.rgba(1, 1, 1, 0.03)
         radius: height / 2
         clip: true
+   
         opacity: batterySliderRoot.batteryAvailable ? 1.0 : 0.5
 
         // --- STATIC LEFT ICON (BACKGROUND) ---
@@ -82,6 +78,7 @@ Item {
             
             anchors.left: parent.left
             anchors.leftMargin: 15
+          
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: 0
             Component.onCompleted: fc.applySmoothing(this)
@@ -98,6 +95,7 @@ Item {
             color: Qt.rgba(1, 1, 1, 0.35)
             font.family: fc.mainFont
             font.pixelSize: 13
+  
             font.weight: Font.Bold
             Component.onCompleted: fc.applySmoothing(this)
         }
@@ -107,7 +105,8 @@ Item {
             id: fillBar
             height: parent.height
             // Set width to 0 if hardware is missing, eliminating the fallback white circle completely
-            width: !batterySliderRoot.batteryAvailable ? 0 : parent.height + ((parent.width - parent.height) * (batterySliderRoot.batteryCapacity / 100))
+            width: !batterySliderRoot.batteryAvailable ?
+ 0 : parent.height + ((parent.width - parent.height) * (batterySliderRoot.batteryCapacity / 100))
             color: "#ffffff"
             radius: height / 2
             anchors.left: parent.left
@@ -115,23 +114,27 @@ Item {
             clip: true
             visible: batterySliderRoot.batteryAvailable // Ensure layout bounds don't draw when missing
 
+  
             // --- STATIC LEFT ICON (FOREGROUND OVERLAY) ---
             Text {
                 id: fgIcon
                 visible: batterySliderRoot.batteryAvailable && fillBar.width >= x
                 text: bgIcon.text
+               
                 font.family: fc.iconFont
                 font.pixelSize: 24
                 color: Qt.rgba(0, 0, 0, 0.75)
                 
                 width: 24
                 height: 24
+           
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 
                 x: 15
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: 0
+          
                 Component.onCompleted: fc.applySmoothing(this)
             }
 
@@ -139,11 +142,13 @@ Item {
             Text {
                 id: fgLabel
                 visible: batterySliderRoot.batteryAvailable && fillBar.width >= x
+           
                 x: 49 // Absolute coordinate sync: 15 (Margin) + 24 (Width) + 10 (Gap)
                 y: bgLabel.y
                 text: batterySliderRoot.combinedText
                 color: Qt.rgba(0, 0, 0, 0.85)
                 font.family: fc.mainFont
+           
                 font.pixelSize: 13
                 font.weight: Font.Bold
                 Component.onCompleted: fc.applySmoothing(this)
