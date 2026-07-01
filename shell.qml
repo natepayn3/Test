@@ -22,6 +22,10 @@ ShellRoot {
     AppLauncher { id: appLauncherModule }
     Wallpaper { id: wallpaperWindowModule; rootShell: shellRoot }
 
+    StatusTray {
+        id: topStatusTraySurface
+    }
+
     NotificationServer {
         id: notifServer
         bodySupported: true
