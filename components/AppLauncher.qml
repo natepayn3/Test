@@ -150,35 +150,39 @@ Scope {
             anchors.bottomMargin: shellConfig.panelBottomMargin
             anchors.horizontalCenter: parent.horizontalCenter
 
-            // --- Standalone Left Side Speaker Icon ---
+            // --- Standalone Top App Icon ---
             Text {
-                id: leftSpeakerIcon
-                text: "terminal"
+                id: leftAppIcon
+                text: "terminal_2"
                 font.family: fc.iconFont
-                font.pixelSize: 175
+                font.pixelSize: 100
                 color: launcherModuleRoot.themeBackground
                 styleColor: colorBackground
-                
                 anchors.right: parent.left
-                anchors.rightMargin: -7
+                anchors.rightMargin: -10
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: 0
             }
 
-            // --- Standalone Right Side Speaker Icon ---
+            // --- Standalone Right App Icon ---
             Text {
-                id: rightSpeakerIcon
-                text: "terminal"
+                id: rightAppIcon
+                text: "terminal_2"
                 font.family: fc.iconFont
-                font.pixelSize: 175
+                font.pixelSize: 100
                 color: launcherModuleRoot.themeBackground
                 styleColor: colorBackground
-
                 anchors.left: parent.right
-                anchors.leftMargin: -7
+                anchors.leftMargin: -10
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: 0
-            }
+                transform: Scale { 
+                    origin.x: rightAppIcon.width / 2
+                    xScale: -1 
+                }
+            } 
+
+
 
             // --- DECLARATIVE STATE ENGINE ---
             states: [
@@ -250,9 +254,10 @@ Scope {
 
                 Item {
                     anchors.fill: parent
-                    anchors.margins: 22 
+                    anchors.margins: 22
 
                     ColumnLayout {
+                        id: mainLayout
                         anchors.fill: parent
                         spacing: 20 
 
@@ -269,6 +274,21 @@ Scope {
                                 style: Text.Outline
                                 styleColor: Qt.rgba(0, 0, 0, 0.35)
                                 Layout.fillWidth: true
+                            }
+                            Item {
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                text: "terminal"
+                                color: "#ffffff"
+                                font.family: fc.iconFont
+                                font.pixelSize: 40
+                                font.weight: Font.ExtraLight
+                                style: Text.Outline
+                                styleColor: Qt.rgba(0, 0, 0, 0.35)
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.preferredHeight: 18
                             }
                         }
 
