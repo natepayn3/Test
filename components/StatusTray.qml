@@ -17,12 +17,27 @@ PanelWindow {
     property int totalItemCount: SystemTray.items.values.length
     
     implicitWidth: totalItemCount === 0 ? 244 : (totalItemCount * 64) + ((totalItemCount - 1) * 16) + 48
-    implicitHeight: 120 // Maintains boundary height for tooltips
+    implicitHeight: 120 // Static canvas bounds matching Dock strategy
     color: "transparent"
     exclusiveZone: 0
 
     FontConfig { id: fc }
     ModuleConfig { id: shellConfig }
+
+    // Mask strategy ported from Dock.qml to clip input area safely
+    Item {
+        id: staticMaskSurface
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: trayHitbox.isPinned ? 120 : 16
+    }
+
+    mask: Region {
+        Region {
+            item: staticMaskSurface
+        }
+    }
 
     property color themeText: shellConfig.themeText
     property color themeBorder: shellConfig.colorBorder
@@ -37,7 +52,6 @@ PanelWindow {
         hoverEnabled: true
 
         property bool isPinned: false
-        // Track hover across both the edge hotspot and the active capsule/window area
         property bool stableHover: hotspotTrigger.containsMouse || innerCapsuleMouseTracker.containsMouse
 
         onStableHoverChanged: {
@@ -49,7 +63,6 @@ PanelWindow {
             }
         }
 
-        // Edge hotspot matching Dock's profile: 16px tall pinned to the very top edge
         MouseArea {
             id: hotspotTrigger
             width: parent.width - 4
@@ -59,7 +72,6 @@ PanelWindow {
             hoverEnabled: true
         }
 
-        // --- Visual Capsule Container ---
         Rectangle {
             id: inputStabilizerCapsule
             width: parent.width - 24
@@ -67,14 +79,19 @@ PanelWindow {
             radius: shellConfig.radiusValue - 2
             anchors.horizontalCenter: parent.horizontalCenter
  
+            // Slide mechanics inverted for top anchor but timings matched perfectly to Dock
             y: trayHitbox.isPinned ? 6 : -height
             color: shellConfig.colorBackground
             border.color: trayHitbox.isPinned ? shellConfig.colorBorder : "transparent"
             border.width: 1
             opacity: trayHitbox.isPinned ? 1.0 : 0.0
 
-            Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+            Behavior on y { 
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic } 
+            }
+            Behavior on opacity { 
+                NumberAnimation { duration: 150; easing.type: Easing.OutQuad } 
+            }
 
             Row {
                 id: visualTrayCapsule
@@ -126,7 +143,6 @@ PanelWindow {
                             Behavior on opacity { NumberAnimation { duration: 180 } }
                         }
 
-                        // --- Dynamic Tooltip Bubble ---
                         Rectangle {
                             id: tooltipBubble
                             visible: trayWindow.activeHoverIndex === index && modelData.title !== ""
@@ -172,7 +188,6 @@ PanelWindow {
                 }
             }
 
-            // Mouse proxy layer mirroring Dock's interaction mechanics 
             MouseArea {
                 id: innerCapsuleMouseTracker
                 anchors.fill: parent
