@@ -82,6 +82,38 @@ PanelWindow {
       
             radius: shellConfig.radiusValue
 
+            // --- Standalone Left Side Wifi Icon ---
+            Text {
+                id: leftWifiIcon
+                text: "rss_feed"
+                font.family: fc.iconFont
+                font.pixelSize: 125
+                color: wifiPopupWindow.colorBackground
+                styleColor: colorBackground
+                
+                anchors.right: parent.left
+                anchors.rightMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: 0
+                rotation: -135
+            }
+
+            // --- Standalone Right Side Wifi Icon ---
+            Text {
+                id: rightWifiIcon
+                text: "rss_feed"
+                font.family: fc.iconFont
+                font.pixelSize: 125
+                color: wifiPopupWindow.colorBackground
+                styleColor: colorBackground
+
+                anchors.left: parent.right
+                anchors.leftMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: 0
+                rotation: 45
+            }
+
             // --- DECLARATIVE STATE ENGINE ---
             states: [
                 State {
