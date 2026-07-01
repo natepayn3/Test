@@ -8,7 +8,6 @@ import Quickshell.Io
 PanelWindow {
     id: audioPopupWindow
 
-    // --- Window Configuration ---
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-launcher"
     WlrLayershell.keyboardFocus: visible ? WlrLayershell.OnDemand : WlrLayershell.None
@@ -23,39 +22,37 @@ PanelWindow {
     
     color: "transparent"
 
-    // --- Global Theme Mapping ---
     property color colorBackground: shellConfig.colorBackground
     property color colorBorder: shellConfig.colorBorder
 
-    // Internal flag managing the graceful scale/fade execution loop
     property bool animateActive: false
 
     // --- State Properties ---
     property int systemVolume: 50
     property bool isMuted: false
+    
+    property int inputVolume: 50
+    property bool isInputMuted: false
 
-    // --- Fullscreen Outside Dismiss Wrapper ---
     MouseArea {
         id: outsideDismiss
         anchors.fill: parent
-        onClicked: audioPopupWindow.animateActive = false // Initiates uniform collapse cycle
+        onClicked: audioPopupWindow.animateActive = false 
 
-        // --- Main Visual Panel ---
         Rectangle {
             id: bgCard
             width: 360
-            height: mainLayout.implicitHeight + 40
+            height: Math.min(mainLayout.implicitHeight + 40, 560) 
             transformOrigin: Item.Center
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 100
             anchors.horizontalCenter: parent.horizontalCenter
-            
+           
             color: audioPopupWindow.colorBackground
             border.color: audioPopupWindow.colorBorder
             border.width: 1
             radius: shellConfig.radiusValue
 
-            // --- Standalone Left Side Speaker Icon ---
             Text {
                 id: leftSpeakerIcon
                 text: "speaker_2"
@@ -63,14 +60,13 @@ PanelWindow {
                 font.pixelSize: 175
                 color: audioPopupWindow.colorBackground
                 styleColor: colorBackground
-                
+             
                 anchors.right: parent.left
                 anchors.rightMargin: -30
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: 0
             }
 
-            // --- Standalone Right Side Speaker Icon ---
             Text {
                 id: rightSpeakerIcon
                 text: "speaker_2"
@@ -85,7 +81,6 @@ PanelWindow {
                 anchors.verticalCenterOffset: 0
             }
 
-            // --- DECLARATIVE STATE ENGINE ---
             states: [
                 State {
                     name: "hidden"
@@ -114,7 +109,6 @@ PanelWindow {
                             NumberAnimation { target: bgCard; property: "scale"; duration: shellConfig.durationOut; easing.type: Easing.InBack; easing.amplitude: shellConfig.springIn }
                             NumberAnimation { target: bgCard; property: "opacity"; duration: shellConfig.opacityOut; easing.type: Easing.InQuad }
                         }
-                        // Securely clip layout visibility after animation finishes
                         ScriptAction { script: audioPopupWindow.visible = false } 
                     }
                 }
@@ -129,9 +123,9 @@ PanelWindow {
                 id: mainLayout
                 anchors.fill: parent
                 anchors.margins: 22
-                spacing: 20
+                spacing: 16
 
-                // --- Header Row ---
+                // ==================== AUDIO OUTPUT SECTION ====================
                 RowLayout {
                     Layout.fillWidth: true
 
@@ -139,7 +133,7 @@ PanelWindow {
                         text: "Audio Output"
                         color: "#ffffff"
                         font.family: "Google Sans Flex"
-                        font.pixelSize: 18
+                        font.pixelSize: 16
                         font.weight: Font.Bold
                         style: Text.Outline
                         styleColor: Qt.rgba(0, 0, 0, 0.35)
@@ -150,7 +144,7 @@ PanelWindow {
                         text: audioPopupWindow.isMuted ? "Muted" : audioPopupWindow.systemVolume + "%"
                         color: "#ffffff"
                         font.family: "Google Sans Flex"
-                        font.pixelSize: 18
+                        font.pixelSize: 16
                         font.weight: Font.Bold
                         style: Text.Outline
                         styleColor: Qt.rgba(0, 0, 0, 0.35)
@@ -158,18 +152,27 @@ PanelWindow {
                     }
                 }
 
-                // --- Slider Control Core ---
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 18
+                    spacing: 14
 
                     Text {
                         text: audioPopupWindow.isMuted ? "volume_off" : "volume_up"
                         font.family: fc.iconFont
-                        font.pixelSize: 32
+                        font.pixelSize: 28
                         color: Qt.rgba(1, 1, 1, 0.9)
                         style: Text.Outline
                         styleColor: Qt.rgba(0, 0, 0, 0.35)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                audioPopupWindow.isMuted = !audioPopupWindow.isMuted;
+                                muteWriteProc.command = ["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"];
+                                muteWriteProc.running = true;
+                            }
+                        }
                     }
 
                     Slider {
@@ -207,24 +210,17 @@ PanelWindow {
                         handle: Rectangle {
                             x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
                             y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
-                            implicitWidth: 18
-                            implicitHeight: 18
-                            radius: 9
+                            implicitWidth: 16
+                            implicitHeight: 16
+                            radius: 8
                             color: audioPopupWindow.isMuted ? "#999999" : "#ffffff"
                         }
                     }
                 }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: Qt.rgba(1, 1, 1, 0.1)
-                }
-
-                // --- Routing Repeater Sink List ---
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 6
 
                     Repeater {
                         id: sinkRepeater
@@ -232,17 +228,16 @@ PanelWindow {
 
                         delegate: MouseArea {
                             Layout.fillWidth: true
-                            implicitHeight: 44
+                            implicitHeight: 38
                             hoverEnabled: true
-                            
                             onClicked: {
-                                sinkSetProc.command = ["wpctl", "set-default", model.sinkId];
+                                sinkSetProc.command = ["wpctl", "set-default", model.sinkTarget];
                                 sinkSetProc.running = true;
                             }
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 12
+                                radius: 10
                                 color: parent.containsMouse ? Qt.rgba(0.4, 0.4, 0.4, 0.28) : "transparent"
                                 border.color: parent.containsMouse ? Qt.rgba(0, 0, 0, 0.2) : "transparent"
                                 border.width: 1
@@ -250,14 +245,14 @@ PanelWindow {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 14
-                                anchors.rightMargin: 14
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
 
                                 Text {
                                     text: model.sinkName
                                     color: "#ffffff"
                                     font.family: "Google Sans Flex"
-                                    font.pixelSize: 15
+                                    font.pixelSize: 14
                                     font.weight: model.isDefault ? Font.DemiBold : Font.Normal
                                     opacity: model.isDefault ? 1.0 : 0.7
                                     style: Text.Outline
@@ -269,7 +264,164 @@ PanelWindow {
                                 Text {
                                     text: "check"
                                     font.family: fc.iconFont
-                                    font.pixelSize: 20
+                                    font.pixelSize: 18
+                                    color: "#ffffff"
+                                    opacity: 0.95
+                                    style: Text.Outline
+                                    styleColor: Qt.rgba(0, 0, 0, 0.35)
+                                    visible: model.isDefault
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: Qt.rgba(1, 1, 1, 0.1)
+                }
+
+                // ==================== AUDIO INPUT SECTION ====================
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "Audio Input"
+                        color: "#ffffff"
+                        font.family: "Google Sans Flex"
+                        font.pixelSize: 16
+                        font.weight: Font.Bold
+                        style: Text.Outline
+                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: audioPopupWindow.isInputMuted ? "Muted" : audioPopupWindow.inputVolume + "%"
+                        color: "#ffffff"
+                        font.family: "Google Sans Flex"
+                        font.pixelSize: 16
+                        font.weight: Font.Bold
+                        style: Text.Outline
+                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+                        horizontalAlignment: Text.AlignRight
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 14
+
+                    Text {
+                        text: audioPopupWindow.isInputMuted ? "mic_off" : "mic"
+                        font.family: fc.iconFont
+                        font.pixelSize: 28
+                        color: Qt.rgba(1, 1, 1, 0.9)
+                        style: Text.Outline
+                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                audioPopupWindow.isInputMuted = !audioPopupWindow.isInputMuted;
+                                muteWriteProc.command = ["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"];
+                                muteWriteProc.running = true;
+                            }
+                        }
+                    }
+
+                    Slider {
+                        id: micSlider
+                        Layout.fillWidth: true
+                        from: 0
+                        to: 100
+                        value: audioPopupWindow.inputVolume
+
+                        onMoved: {
+                            audioPopupWindow.inputVolume = value;
+                            if (audioPopupWindow.isInputMuted) audioPopupWindow.isInputMuted = false;
+                            volumeWriteProc.command = ["wpctl", "set-volume", "@DEFAULT_AUDIO_SOURCE@", (value / 100).toFixed(2)];
+                            volumeWriteProc.running = true;
+                        }
+
+                        background: Rectangle {
+                            x: micSlider.leftPadding
+                            y: micSlider.topPadding + micSlider.availableHeight / 2 - height / 2
+                            implicitWidth: 200
+                            implicitHeight: 6
+                            width: micSlider.availableWidth
+                            height: implicitHeight
+                            radius: 3
+                            color: Qt.rgba(1, 1, 1, 0.15)
+
+                            Rectangle {
+                                width: micSlider.visualPosition * parent.width
+                                height: parent.height
+                                color: audioPopupWindow.isInputMuted ? "#666666" : Qt.rgba(1, 1, 1, 0.85)
+                                radius: 3
+                            }
+                        }
+
+                        handle: Rectangle {
+                            x: micSlider.leftPadding + micSlider.visualPosition * (micSlider.availableWidth - width)
+                            y: micSlider.topPadding + micSlider.availableHeight / 2 - height / 2
+                            implicitWidth: 16
+                            implicitHeight: 16
+                            radius: 8
+                            color: audioPopupWindow.isInputMuted ? "#999999" : "#ffffff"
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Repeater {
+                        id: sourceRepeater
+                        model: ListModel { id: sourceModel }
+
+                        delegate: MouseArea {
+                            Layout.fillWidth: true
+                            implicitHeight: 38
+                            hoverEnabled: true
+                            onClicked: {
+                                sinkSetProc.command = ["wpctl", "set-default", model.sourceTarget];
+                                sinkSetProc.running = true;
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 10
+                                color: parent.containsMouse ? Qt.rgba(0.4, 0.4, 0.4, 0.28) : "transparent"
+                                border.color: parent.containsMouse ? Qt.rgba(0, 0, 0, 0.2) : "transparent"
+                                border.width: 1
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+
+                                Text {
+                                    text: model.sourceName
+                                    color: "#ffffff"
+                                    font.family: "Google Sans Flex"
+                                    font.pixelSize: 14
+                                    font.weight: model.isDefault ? Font.DemiBold : Font.Normal
+                                    opacity: model.isDefault ? 1.0 : 0.7
+                                    style: Text.Outline
+                                    styleColor: Qt.rgba(0, 0, 0, 0.35)
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    text: "check"
+                                    font.family: fc.iconFont
+                                    font.pixelSize: 18
                                     color: "#ffffff"
                                     opacity: 0.95
                                     style: Text.Outline
@@ -295,19 +447,38 @@ PanelWindow {
             "pactl subscribe | grep --line-buffered \"Event 'change' on sink\" | while read -r _; do wpctl get-volume @DEFAULT_AUDIO_SINK@; done"
         ]
         running: true
-
         stdout: SplitParser {
             onRead: data => {
                 let cleaned = data.trim();
                 if (!cleaned.startsWith("Volume:")) return;
-
                 let currentMutedState = cleaned.includes("[MUTED]");
                 let parts = cleaned.split(" ");
                 let volVal = parseFloat(parts[1]);
-                
                 if (!isNaN(volVal) && !volumeSlider.pressed) {
                     audioPopupWindow.systemVolume = Math.round(volVal * 100);
                     audioPopupWindow.isMuted = currentMutedState;
+                }
+            }
+        }
+    }
+
+    Process {
+        id: micEventStream
+        command: [
+            "sh", "-c",
+            "pactl subscribe | grep --line-buffered \"Event 'change' on source\" | while read -r _; do wpctl get-volume @DEFAULT_AUDIO_SOURCE@; done"
+        ]
+        running: true
+        stdout: SplitParser {
+            onRead: data => {
+                let cleaned = data.trim();
+                if (!cleaned.startsWith("Volume:")) return;
+                let currentMutedState = cleaned.includes("[MUTED]");
+                let parts = cleaned.split(" ");
+                let volVal = parseFloat(parts[1]);
+                if (!isNaN(volVal) && !micSlider.pressed) {
+                    audioPopupWindow.inputVolume = Math.round(volVal * 100);
+                    audioPopupWindow.isInputMuted = currentMutedState;
                 }
             }
         }
@@ -322,39 +493,49 @@ PanelWindow {
             onStreamFinished: {
                 let lines = this.text.split("\n");
                 sinkModel.clear();
-                let seenIds = {};
-                let parsingSinks = false;
+                sourceModel.clear();
+                
+                let seenSinkIds = {};
+                let seenSourceIds = {};
+                let targetBlock = 0; 
 
                 for (let i = 0; i < lines.length; i++) {
                     let line = lines[i];
-                    if (line.includes("Sinks:")) { parsingSinks = true; continue; }
-                    if (parsingSinks && (line.includes("Sources:") || line.includes("Filters:") || line.includes("Streams:"))) { 
-                        parsingSinks = false;
+                    
+                    if (line.includes("Sinks:")) { targetBlock = 1; continue; }
+                    if (line.includes("Sources:")) { targetBlock = 2; continue; }
+                    if (line.includes("Filters:") || line.includes("Streams:") || line.includes("Settings:")) { 
+                        targetBlock = 0; 
                     }
 
-                    if (parsingSinks) {
-                        let match = line.match(/(\*\s*)?\s*(\d+)\.\s+(.*)/);
-                        if (match) {
-                            let isDef = (match[1] !== undefined && match[1].includes("*"));
-                            let id = match[2].trim();
-                            
-                            if (seenIds[id]) continue;
-                            seenIds[id] = true;
+                    let match = line.match(/(\*\s*)?\s*(\d+)\.\s+(.*)/);
+                    if (match) {
+                        let isDef = (match[1] !== undefined && match[1].includes("*"));
+                        let id = match[2].trim();
+                        let rawName = match[3].trim();
+                        
+                        let name = rawName.split("[")[0].trim().replace(/[├─└─│]/g, "");
+                        if (name === "") continue;
 
-                            let rawName = match[3].trim();
-                            let name = rawName.split("[")[0].trim().replace(/[├─└─│]/g, "");
-                            if (name === "") continue;
-
-                            sinkModel.append({ isDefault: isDef, sinkId: id, sinkName: name });
+                        // Robust fallback: If numeric evaluation drops, fall back safely on raw node string definitions
+                        if (targetBlock === 1) {
+                            if (seenSinkIds[id]) continue;
+                            seenSinkIds[id] = true;
+                            sinkModel.append({ isDefault: isDef, sinkTarget: id, sinkName: name });
+                        } else if (targetBlock === 2) {
+                            if (seenSourceIds[id]) continue;
+                            seenSourceIds[id] = true;
+                            sourceModel.append({ isDefault: isDef, sourceTarget: id, sourceName: name });
                         }
                     }
                 }
-                audioQueryProc.queryVolume();
+                audioQueryProc.queryAudioMetrics();
             }
         }
 
-        function queryVolume() {
+        function queryAudioMetrics() {
             volumeReadProc.running = true;
+            micReadProc.running = true;
         }
     }
 
@@ -374,7 +555,24 @@ PanelWindow {
         }
     }
 
+    Process {
+        id: micReadProc
+        command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let cleaned = this.text.trim();
+                let match = cleaned.match(/Volume:\s+([0-9.]+)/);
+                if (match) {
+                    audioPopupWindow.inputVolume = Math.round(parseFloat(match[1]) * 100);
+                    audioPopupWindow.isInputMuted = cleaned.includes("[MUTED]");
+                }
+            }
+        }
+    }
+
     Process { id: volumeWriteProc; running: false }
+    Process { id: muteWriteProc; running: false }
     
     Process { 
         id: sinkSetProc
