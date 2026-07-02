@@ -40,6 +40,7 @@ PanelWindow {
             id: bgCard
             width: 360
             height: mainLayout.implicitHeight + 40
+           
             transformOrigin: Item.Center
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 100
@@ -48,6 +49,7 @@ PanelWindow {
             color: powerPopupWindow.colorBackground
             border.color: powerPopupWindow.colorBorder
             border.width: 1
+         
             radius: shellConfig.radiusValue
 
             // --- Standalone Left Side Power Icon ---
@@ -56,7 +58,7 @@ PanelWindow {
                 text: "electrical_services"
                 font.family: fc.iconFont
                 font.pixelSize: 125
-                color: powerPopupWindow.colorBackground
+                color: fc.overlayBackground
                 styleColor: colorBackground
                 
                 anchors.right: parent.left
@@ -67,6 +69,8 @@ PanelWindow {
                     origin.x: leftPowerIcon.width / 2
                     xScale: -1 
                 }
+                
+                Component.onCompleted: fc.applySmoothing(this)
             }
 
             // --- Standalone Right Side Power Icon ---
@@ -75,13 +79,15 @@ PanelWindow {
                 text: "electrical_services"
                 font.family: fc.iconFont
                 font.pixelSize: 125
-                color: powerPopupWindow.colorBackground
+                color: fc.overlayBackground
                 styleColor: colorBackground
 
                 anchors.left: parent.right
                 anchors.leftMargin: -10
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: 0
+                
+                Component.onCompleted: fc.applySmoothing(this)
             }
 
             states: [
@@ -133,13 +139,13 @@ PanelWindow {
 
                     Text {
                         text: "Power Options"
-                        color: "#ffffff"
-                        font.family: "Google Sans Flex"
+                        color: fc.textPrimary
+                        font.family: fc.mainFont
                         font.pixelSize: 18
                         font.weight: Font.Bold
-                        style: Text.Outline
-                        styleColor: Qt.rgba(0, 0, 0, 0.35)
                         Layout.fillWidth: true
+                        
+                        Component.onCompleted: fc.applyOutline(this)
                     }
                 }
 
@@ -164,7 +170,7 @@ PanelWindow {
                             
                             color: powerPopupWindow.activeHoverIndex === index 
                                 ? powerPopupWindow.colorBackground 
-                                : Qt.rgba(powerPopupWindow.themeText.r, powerPopupWindow.themeText.g, powerPopupWindow.themeText.b, 0.15)
+                                : fc.trackBackground
                             border.color: powerPopupWindow.activeHoverIndex === index ? shellConfig.hoverBorder : "transparent"
                             border.width: 1
 
@@ -176,9 +182,10 @@ PanelWindow {
                                     text: modelData.icon
                                     font.family: fc.iconFont
                                     font.pixelSize: 24
-                                    color: powerPopupWindow.themeText
+                                    color: fc.textPrimary
                                     Layout.alignment: Qt.AlignHCenter
-                                    Component.onCompleted: { fc.applyOutline(this) }
+                                    
+                                    Component.onCompleted: fc.applyOutline(this)
                                 }
                             }
 

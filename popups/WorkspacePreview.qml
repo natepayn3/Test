@@ -5,6 +5,7 @@ import QtQuick.Controls
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Io
+import "../configs"
 
 Item {
     id: previewRoot
@@ -31,6 +32,8 @@ Item {
     property string shellFont: shellConfig.shellFont
     property real radiusValue: shellConfig.radiusValue
 
+    FontConfig { id: fc }
+
     // Dynamically expand root width to tightly match the workspace stream aspect bounds plus side paddings
     property real maxCardWidth: viewportFrame.width + 74
     property real maxCardHeight: viewportFrame.calculatedBounds.isVertical ? 500 : 270
@@ -43,11 +46,11 @@ Item {
     
     Behavior on width { 
         id: widthMorphBehavior
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic } 
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
     }
     Behavior on height { 
         id: heightMorphBehavior
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic } 
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
     }
 
     opacity: 1.0
@@ -91,7 +94,7 @@ Item {
         target: Hyprland
         ignoreUnknownSignals: true
         function onRawEvent(event) { 
-            if (previewRoot.active) jsonRefreshTimer.restart();
+             if (previewRoot.active) jsonRefreshTimer.restart();
         }
     }
 
@@ -150,16 +153,17 @@ Item {
             id: antennaIcon
             text: "network_ping"
             font {
-                family: "Material Symbols Outlined"
+                family: fc.iconFont
                 pixelSize: 80
             }
-            color: previewRoot.colorBackground
-            //style: Text.Outline
+            color: fc.overlayBackground
             styleColor: colorBackground
             z: 1
             anchors.bottom: cardMainBody.top
             anchors.horizontalCenter: cardMainBody.horizontalCenter
             anchors.bottomMargin: -28
+            
+            Component.onCompleted: fc.applySmoothing(this)
         }
 
         Item {
@@ -175,6 +179,7 @@ Item {
                 anchors.topMargin: 0
                 anchors.rightMargin: 0
                 anchors.bottomMargin: 0
+              
                 color: "transparent"
                 border.color: previewRoot.colorBorder
                 border.width: 0
@@ -225,51 +230,47 @@ Item {
                     Text {
                         text: "clock_loader_10"
                         font {
-                            family: "Material Symbols Outlined"
+                            family: fc.iconFont
                             pixelSize: 30
                         }
-                        color: Qt.rgba(1, 1, 1, 0.4)
-                        style: Text.Outline
-                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+                        color: fc.textMuted
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 30
                         height: 30
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-
-                        // Direct, zero-overhead horizontal mirror
                         rotation: -45
+
+                        Component.onCompleted: fc.applyOutline(this)
                     }
 
                     Text {
                         text: "clock_loader_10"
                         font {
-                            family: "Material Symbols Outlined"
+                            family: fc.iconFont
                             pixelSize: 30
                         }
-                        color: Qt.rgba(1, 1, 1, 0.4)
-                        style: Text.Outline
-                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+                        color: fc.textMuted
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 30
                         height: 30
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-
-                        // Direct, zero-overhead horizontal mirror
                         rotation: 45
+
+                        Component.onCompleted: fc.applyOutline(this)
                     }
 
                     Text {
                         text: "density_small"
                         font {
-                            family: "Material Symbols Outlined"
+                            family: fc.iconFont
                             pixelSize: 30
                         }
-                        color: Qt.rgba(1, 1, 1, 0.4)
-                        style: Text.Outline
-                        styleColor: Qt.rgba(0, 0, 0, 0.35)
+                        color: fc.textMuted
                         anchors.horizontalCenter: parent.horizontalCenter
+
+                        Component.onCompleted: fc.applyOutline(this)
                     }
                 }
 
@@ -297,10 +298,10 @@ Item {
                             font.family: previewRoot.shellFont
                             font.pixelSize: 13
                             font.bold: true
-                            color: "#ffffff"
+                            color: fc.textPrimary
                             anchors.verticalCenter: parent.verticalCenter
-                            style: Text.Outline
-                            styleColor: Qt.rgba(0, 0, 0, 0.35)
+                            
+                            Component.onCompleted: fc.applyOutline(this)
                         }
 
                         RowLayout {
@@ -308,7 +309,7 @@ Item {
                             height: parent.height
                             spacing: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            
+                        
                             Repeater {
                                 model: viewportFrame.workspaceWindows
                                 delegate: Image {
@@ -408,8 +409,10 @@ Item {
                             height: Math.max(4, Math.round(modelData.size[1] * viewportFrame.scaleY))
                             visible: modelData.mapped
                             
-                            color: viewportFrame.isTargetActiveWorkspace ? Qt.rgba(previewRoot.colorAccent.r, previewRoot.colorAccent.g, previewRoot.colorAccent.b, 0.15) : Qt.rgba(0, 0, 0, 0.6)
-                            border.color: viewportFrame.isTargetActiveWorkspace ? previewRoot.colorAccent : previewRoot.colorBorder
+                            color: viewportFrame.isTargetActiveWorkspace ?
+                                Qt.rgba(previewRoot.colorAccent.r, previewRoot.colorAccent.g, previewRoot.colorAccent.b, 0.15) : Qt.rgba(0, 0, 0, 0.6)
+                            border.color: viewportFrame.isTargetActiveWorkspace ?
+                                previewRoot.colorAccent : previewRoot.colorBorder
                             border.width: 0
                             radius: 2
                             clip: true
@@ -455,17 +458,22 @@ Item {
                             Rectangle {
                                 anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
                                 height: Math.min(14, parent.height * 0.25)
-                                color: viewportFrame.isTargetActiveWorkspace ? previewRoot.colorAccent : "#cc11111b"
+                                color: viewportFrame.isTargetActiveWorkspace ?
+                                    previewRoot.colorAccent : "#cc11111b"
                                 visible: parent.height > 20 && parent.width > 35
                                 z: 10
 
                                 Text {
-                                    text: (modelData.title && modelData.title.trim() !== "" && modelData.title !== "~") ? modelData.title : (modelData.class || "")
+                                    text: (modelData.title && modelData.title.trim() !== "" && modelData.title !== "~") ?
+                                        modelData.title : (modelData.class || "")
                                     font.family: previewRoot.shellFont
-                                    font.pixelSize: 8; font.bold: true 
-                                    color: viewportFrame.isTargetActiveWorkspace ? previewRoot.colorBackground : "#ffffff"
+                                    font.pixelSize: 8;
+                                    font.bold: true 
+                                    color: viewportFrame.isTargetActiveWorkspace ?
+                                        previewRoot.colorBackground : fc.textPrimary
                                     anchors.centerIn: parent
-                                    width: parent.width - 4; elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
+                                    width: parent.width - 4;
+                                    elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
                                 }
                             }
                         }
