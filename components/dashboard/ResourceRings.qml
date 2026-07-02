@@ -44,25 +44,23 @@ Item {
             // VECTOR OUTLINE LAYER: Active Progress Segment Drop-Shadow Only
             ShapePath {
                 fillColor: "transparent"
-                strokeColor: Qt.rgba(0, 0, 0, 0.35)
+                strokeColor: fc.overlayBackground
                 strokeWidth: 5.5
                 capStyle: ShapePath.RoundCap
                 PathAngleArc { 
                     centerX: 42; centerY: 42; radiusX: 37; radiusY: 37 
-                    startAngle: -90;
-                    sweepAngle: Math.max(0.1, ringRow.value * 360) 
+                    startAngle: -90; sweepAngle: Math.max(0.1, ringRow.value * 360) 
                 }
             }
             
             // Standard Translucent Track Background (No outline underneath)
             ShapePath {
                 fillColor: "transparent"
-                strokeColor: Qt.rgba(1, 1, 1, 0.06) 
+                strokeColor: fc.trackBackground
                 strokeWidth: 3.5 
                 PathAngleArc { 
                     centerX: 42; centerY: 42; radiusX: 37; radiusY: 37 
-                    startAngle: -90;
-                    sweepAngle: 360 
+                    startAngle: -90; sweepAngle: 360 
                 }
             }
 
@@ -74,8 +72,7 @@ Item {
                 capStyle: ShapePath.RoundCap
                 PathAngleArc { 
                     centerX: 42; centerY: 42; radiusX: 37; radiusY: 37 
-                    startAngle: -90;
-                    sweepAngle: Math.max(0.1, ringRow.value * 360) 
+                    startAngle: -90; sweepAngle: Math.max(0.1, ringRow.value * 360) 
                 }
             }
         }
@@ -86,13 +83,13 @@ Item {
 
             Text {
                 text: ringRow.label
-                color: Qt.rgba(1, 1, 1, 0.4)
+                color: fc.textMuted
                 font.family: fc.mainFont
                 font.pixelSize: 10 
                 font.weight: Font.Bold
                 anchors.horizontalCenter: parent.horizontalCenter
                 Component.onCompleted: {
-                    fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.35))
+                    fc.applyOutline(this, fc.overlayBackground)
                 }
             }
             Text {
@@ -103,7 +100,7 @@ Item {
                 font.weight: Font.DemiBold
                 anchors.horizontalCenter: parent.horizontalCenter
                 Component.onCompleted: {
-                    fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.35))
+                    fc.applyOutline(this, fc.overlayBackground)
                 }
             }
         }
@@ -115,25 +112,30 @@ Item {
         spacing: 0
 
         StatRingItem { 
-            label: "CPU"; value: ringsRoot.sysCpu
+            label: "CPU"
+            value: ringsRoot.sysCpu
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         }
         StatRingItem { 
-            label: "GPU"; value: ringsRoot.sysGpu
+            label: "GPU"
+            value: ringsRoot.sysGpu
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         }
         StatRingItem { 
-            label: "RAM"; value: ringsRoot.sysRam
+            label: "RAM"
+            value: ringsRoot.sysRam
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         }
         StatRingItem { 
-            label: "DISK"; value: ringsRoot.sysDisk
+            label: "DISK"
+            value: ringsRoot.sysDisk
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         }
     }
 
     FileView {
-        id: memInfoReader; path: "/proc/meminfo"
+        id: memInfoReader
+        path: "/proc/meminfo"
         onTextChanged: {
             let lines = text().split('\n'), total = 0, avail = 0;
             for (let i = 0; i < lines.length; i++) {
@@ -145,7 +147,8 @@ Item {
     }
 
     FileView {
-        id: cpuStatReader; path: "/proc/stat"
+        id: cpuStatReader
+        path: "/proc/stat"
         onTextChanged: {
             let parts = text().split('\n')[0].split(/\s+/).filter(Boolean);
             if (parts.length >= 5) {
@@ -168,8 +171,9 @@ Item {
                     let lines = this.text.trim().split("\n");
                     if (lines.length >= 2) {
                         let rawGpu = parseFloat(lines[0]) || 0.0;
-                        ringsRoot.sysGpu = rawGpu > 1.0 ? rawGpu / 100.0 : rawGpu;
-                        ringsRoot.sysDisk = (parseFloat(lines[1]) || 0.0) / 100.0;
+                        ringsRoot.sysGpu = rawGpu / 100.0;
+                        let rawDisk = parseFloat(lines[1]) || 0.0;
+                        ringsRoot.sysDisk = rawDisk / 100.0;
                     }
                 } catch(e) {}
                 diskGpuProc.running = false;

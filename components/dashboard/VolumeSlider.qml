@@ -32,9 +32,9 @@ Item {
     Rectangle {
         id: bgTrack
         anchors.fill: parent
-        color: Qt.rgba(1, 1, 1, 0.05)
+        color: fc.trackBackground
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.03)
+        border.color: fc.borderMuted
         radius: height / 2
         
         // Enforce master clipping bounds so the slider fill can never escape or deform
@@ -78,7 +78,7 @@ Item {
                 y: (volumeSliderRoot.height - height) / 2
                 
                 text: volumeSliderRoot.percentageText
-                color: Qt.rgba(0, 0, 0, 0.85)
+                color: fc.overlayForeground
                 font.family: fc.mainFont
                 font.pixelSize: 13
                 font.weight: Font.Bold
@@ -93,14 +93,15 @@ Item {
         // Background Icon (White/Dimmed when unfilled)
         Text {
             id: bgIcon
+            visible: fillBar.width < (x + width) // Fixed icon overlap behavior from other modules
             text: volumeSliderRoot.currentVolume === 0 ? "volume_off" : (volumeSliderRoot.currentVolume < 0.4 ? "volume_down" : "volume_up")
             font.family: fc.iconFont
-            font.pixelSize: 18
+            font.pixelSize: 24
             color: Qt.rgba(1, 1, 1, 0.4)
             anchors.left: parent.left
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            
+           
             Component.onCompleted: {
                 fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.35))
             }
@@ -115,11 +116,11 @@ Item {
             Text {
                 text: volumeSliderRoot.currentVolume === 0 ? "volume_off" : (volumeSliderRoot.currentVolume < 0.4 ? "volume_down" : "volume_up")
                 font.family: fc.iconFont
-                font.pixelSize: 18
-                color: Qt.rgba(0, 0, 0, 0.75)
+                font.pixelSize: 24
+                color: fc.overlayForeground
                 x: 16
                 anchors.verticalCenter: parent.verticalCenter
-                
+    
                 Component.onCompleted: {
                     fc.applySmoothing(this)
                 }

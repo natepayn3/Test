@@ -6,7 +6,7 @@ import "../../configs"
 Item {
     id: batterySliderRoot
     width: parent.width
-    height: 36 // Shorter overall height
+    height: 36
 
     // Production logic state bindings
     property bool batteryAvailable: false
@@ -14,17 +14,14 @@ Item {
     property bool batteryCharging: false
     
     // Status text generation logic
-    property string statusText: !batteryAvailable ?
- "" : (batteryCharging ? "Charging" : (batteryCapacity >= 99 ? "Charged" : "Discharging"))
-    property string combinedText: batteryAvailable ?
- batteryCapacity + "% • " + statusText : "No Battery"
+    property string statusText: !batteryAvailable ? "" : (batteryCharging ? "Charging" : (batteryCapacity >= 99 ? "Charged" : "Discharging"))
+    property string combinedText: batteryAvailable ? batteryCapacity + "% • " + statusText : "No Battery"
 
     FontConfig { id: fc }
 
     // Persistent background process with zero timers
     Process {
         id: batteryFetcher
-        // Enclosing the work in a function and invoking it before entering the loop eliminates the startup delay
         command: ["sh", "-c", "fetch() { for b in BAT0 BAT1; do if [ -d /sys/class/power_supply/$b ]; then cap=$(cat /sys/class/power_supply/$b/capacity); stat=$(cat /sys/class/power_supply/$b/status); echo \"$cap;$stat\"; break; fi; done; }; fetch; while true; do sleep 30; fetch; done"]
         running: batterySliderRoot.visible
         
@@ -48,12 +45,11 @@ Item {
     Rectangle {
         id: bgTrack
         anchors.fill: parent
-        color: Qt.rgba(1, 1, 1, 0.05)
+        color: fc.trackBackground
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.03)
+        border.color: fc.borderMuted
         radius: height / 2
         clip: true
-   
         opacity: batterySliderRoot.batteryAvailable ? 1.0 : 0.5
 
         // --- STATIC LEFT ICON (BACKGROUND) ---
@@ -71,15 +67,12 @@ Item {
             font.family: fc.iconFont
             font.pixelSize: 24
             color: Qt.rgba(1, 1, 1, 0.4)
-            
             width: 24
             height: 24
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            
             anchors.left: parent.left
             anchors.leftMargin: 15
-          
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: 0
             Component.onCompleted: fc.applySmoothing(this)
@@ -96,7 +89,6 @@ Item {
             color: Qt.rgba(1, 1, 1, 0.35)
             font.family: fc.mainFont
             font.pixelSize: 13
-  
             font.weight: Font.Bold
             Component.onCompleted: fc.applySmoothing(this)
         }
@@ -105,37 +97,29 @@ Item {
         Rectangle {
             id: fillBar
             height: parent.height
-            // Set width to 0 if hardware is missing, eliminating the fallback white circle completely
-            width: !batterySliderRoot.batteryAvailable ?
- 0 : parent.height + ((parent.width - parent.height) * (batterySliderRoot.batteryCapacity / 100))
+            width: !batterySliderRoot.batteryAvailable ? 0 : parent.height + ((parent.width - parent.height) * (batterySliderRoot.batteryCapacity / 100))
             color: "#ffffff"
             radius: height / 2
             anchors.left: parent.left
             anchors.leftMargin: 0
             clip: true
-            visible: batterySliderRoot.batteryAvailable // Ensure layout bounds don't draw when missing
+            visible: batterySliderRoot.batteryAvailable
 
-  
             // --- STATIC LEFT ICON (FOREGROUND OVERLAY) ---
             Text {
                 id: fgIcon
                 visible: batterySliderRoot.batteryAvailable && fillBar.width >= x
                 text: bgIcon.text
-               
                 font.family: fc.iconFont
                 font.pixelSize: 24
-                color: Qt.rgba(0, 0, 0, 0.75)
-                
+                color: fc.overlayForeground
                 width: 24
                 height: 24
-           
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                
                 x: 15
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: 0
-          
                 Component.onCompleted: fc.applySmoothing(this)
             }
 
@@ -143,13 +127,11 @@ Item {
             Text {
                 id: fgLabel
                 visible: batterySliderRoot.batteryAvailable && fillBar.width >= x
-           
-                x: 49 // Absolute coordinate sync: 15 (Margin) + 24 (Width) + 10 (Gap)
+                x: 49
                 y: bgLabel.y
                 text: batterySliderRoot.combinedText
-                color: Qt.rgba(0, 0, 0, 0.85)
+                color: fc.overlayForeground
                 font.family: fc.mainFont
-           
                 font.pixelSize: 13
                 font.weight: Font.Bold
                 Component.onCompleted: fc.applySmoothing(this)

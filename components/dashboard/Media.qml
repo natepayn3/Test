@@ -30,7 +30,7 @@ RowLayout {
             source: mediaRoot.mediaArtUrl ? mediaRoot.mediaArtUrl : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
-            visible: false // Hidden so the mask can render it instead
+            visible: false
         }
 
         Rectangle {
@@ -38,7 +38,7 @@ RowLayout {
             anchors.fill: parent
             radius: 12
             color: "black"
-            visible: false // Hidden mask template
+            visible: false
         }
 
         OpacityMask {
@@ -74,22 +74,23 @@ RowLayout {
             elide: Text.ElideRight
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
+            
             Component.onCompleted: {
-                fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.8))
+                fc.applyOutline(this, fc.overlayBackground)
             }
         }
 
         Text { 
             id: artistText
             text: mediaRoot.mediaArtist
-            color: Qt.rgba(1, 1, 1, 0.5)
+            color: fc.textMuted
             font.family: fc.mainFont
             font.pixelSize: 11
             elide: Text.ElideRight
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             Component.onCompleted: {
-                fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.8))
+                fc.applyOutline(this, fc.overlayBackground)
             }
         }
 
@@ -107,12 +108,11 @@ RowLayout {
                     font.family: fc.iconFont
                     font.pixelSize: 20
                     color: "#ffffff"
-                    Component.onCompleted: fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.8))
+                    Component.onCompleted: fc.applyOutline(this, fc.overlayBackground)
                 }
                 MouseArea { 
                     anchors.fill: parent
-                    onClicked: { mediaControlProc.command = ["playerctl", "previous"];
-                    mediaControlProc.running = true; }
+                    onClicked: { mediaControlProc.command = ["playerctl", "previous"]; mediaControlProc.running = true; }
                 }
             }
 
@@ -126,12 +126,11 @@ RowLayout {
                     font.family: fc.iconFont
                     font.pixelSize: 26
                     color: "#ffffff"
-                    Component.onCompleted: fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.8))
+                    Component.onCompleted: fc.applyOutline(this, fc.overlayBackground)
                 }
                 MouseArea { 
                     anchors.fill: parent
-                    onClicked: { mediaControlProc.command = ["playerctl", "play-pause"];
-                    mediaControlProc.running = true; }
+                    onClicked: { mediaControlProc.command = ["playerctl", "play-pause"]; mediaControlProc.running = true; }
                 }
             }
 
@@ -145,12 +144,11 @@ RowLayout {
                     font.family: fc.iconFont
                     font.pixelSize: 20
                     color: "#ffffff"
-                    Component.onCompleted: fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.8))
+                    Component.onCompleted: fc.applyOutline(this, fc.overlayBackground)
                 }
                 MouseArea { 
                     anchors.fill: parent
-                    onClicked: { mediaControlProc.command = ["playerctl", "next"];
-                    mediaControlProc.running = true; }
+                    onClicked: { mediaControlProc.command = ["playerctl", "next"]; mediaControlProc.running = true; }
                 }
             }
         }
@@ -160,7 +158,7 @@ RowLayout {
     
     Process {
         id: mediaFollower
-        command: ["playerctl", "metadata", "--follow", "--format", "{\"title\": \"{{title}}\", \"artist\": \"{{artist}}\", \"status\": \"{{status}}\", \"art\": \"{{mpris:artUrl}}\"}"]
+        command: ["playerctl", "metadata", "--follow", "--format", "{\\\"title\\\": \\\"{{title}}\\\", \\\"artist\\\": \\\"{{artist}}\\\", \\\"status\\\": \\\"{{status}}\\\", \\\"art\\\": \\\"{{mpris:artUrl}}\\\"}"]
         running: false
         stdout: SplitParser {
             onRead: (data) => {

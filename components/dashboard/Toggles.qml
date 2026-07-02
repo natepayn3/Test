@@ -62,9 +62,9 @@ Item {
             id: wifiContainer
             Layout.fillWidth: true
             height: 64
-            color: Qt.rgba(1, 1, 1, 0.05)
+            color: fc.trackBackground
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.03)
+            border.color: fc.borderMuted
             radius: height / 2
             clip: true
             opacity: togglesWrapper.wifiAvailable ? 1.0 : 0.5
@@ -82,7 +82,6 @@ Item {
                 states: [
                     State {
                         name: "on"; when: togglesWrapper.wifiActive
-                        // 🎯 Margins are cleanly encapsulated directly inside the anchor translation passes
                         AnchorChanges { target: wifiText; anchors.left: parent.left; anchors.right: undefined }
                         PropertyChanges { target: wifiText; anchors.leftMargin: 20 }
                     },
@@ -111,7 +110,7 @@ Item {
                     text: !togglesWrapper.wifiAvailable ? "wifi_off" : "wifi"
                     font.family: "Material Symbols Outlined"
                     font.pixelSize: 18
-                    color: togglesWrapper.wifiActive ? Qt.rgba(0, 0, 0, 0.75) : Qt.rgba(1, 1, 1, 0.4)
+                    color: togglesWrapper.wifiActive ? fc.overlayForeground : Qt.rgba(1, 1, 1, 0.4)
                     Component.onCompleted: fc.applySmoothing(this)
                 }
             }
@@ -128,9 +127,9 @@ Item {
             id: btContainer
             Layout.fillWidth: true
             height: 64
-            color: Qt.rgba(1, 1, 1, 0.05)
+            color: fc.trackBackground
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.03)
+            border.color: fc.borderMuted
             radius: height / 2
             clip: true
 
@@ -175,7 +174,7 @@ Item {
                     text: "bluetooth"
                     font.family: "Material Symbols Outlined"
                     font.pixelSize: 18
-                    color: togglesWrapper.btActive ? Qt.rgba(0, 0, 0, 0.75) : Qt.rgba(1, 1, 1, 0.4)
+                    color: togglesWrapper.btActive ? fc.overlayForeground : Qt.rgba(1, 1, 1, 0.4)
                     Component.onCompleted: fc.applySmoothing(this)
                 }
             }
@@ -192,9 +191,9 @@ Item {
             id: dndContainer
             Layout.fillWidth: true
             height: 64
-            color: Qt.rgba(1, 1, 1, 0.05)
+            color: fc.trackBackground
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.03)
+            border.color: fc.borderMuted
             radius: height / 2
             clip: true
 
@@ -239,7 +238,7 @@ Item {
                     text: "do_not_disturb_on"
                     font.family: "Material Symbols Outlined"
                     font.pixelSize: 18
-                    color: togglesWrapper.dndActive ? Qt.rgba(0, 0, 0, 0.75) : Qt.rgba(1, 1, 1, 0.4)
+                    color: togglesWrapper.dndActive ? fc.overlayForeground : Qt.rgba(1, 1, 1, 0.4)
                     Component.onCompleted: fc.applySmoothing(this)
                 }
             }
@@ -256,9 +255,9 @@ Item {
             id: caffeineContainer
             Layout.fillWidth: true
             height: 64
-            color: Qt.rgba(1, 1, 1, 0.05)
+            color: fc.trackBackground
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.03)
+            border.color: fc.borderMuted
             radius: height / 2
             clip: true
             opacity: togglesWrapper.caffeineAvailable ? 1.0 : 0.5
@@ -296,15 +295,11 @@ Item {
                 width: parent.height - 4
                 height: parent.height - 4
                 radius: height / 2
-                
-                // Fixes the knob background color when unavailable
                 color: !togglesWrapper.caffeineAvailable ? Qt.rgba(1, 1, 1, 0.12) :
                        togglesWrapper.caffeineActive ? "#ffffff" : Qt.rgba(1, 1, 1, 0.12)
                        
                 anchors.verticalCenter: parent.verticalCenter
-                
-                x: (togglesWrapper.caffeineAvailable && togglesWrapper.caffeineActive) ?
-                   parent.width - width - 2 : 2
+                x: (togglesWrapper.caffeineAvailable && togglesWrapper.caffeineActive) ? parent.width - width - 2 : 2
 
                 Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
@@ -313,10 +308,8 @@ Item {
                     text: "local_cafe"
                     font.family: "Material Symbols Outlined"
                     font.pixelSize: 18
-                    
-                    // Fixes the icon text color when unavailable
                     color: !togglesWrapper.caffeineAvailable ? Qt.rgba(1, 1, 1, 0.4) :
-                           togglesWrapper.caffeineActive ? Qt.rgba(0, 0, 0, 0.75) : Qt.rgba(1, 1, 1, 0.4)
+                           togglesWrapper.caffeineActive ? fc.overlayForeground : Qt.rgba(1, 1, 1, 0.4)
                            
                     Component.onCompleted: fc.applySmoothing(this)
                 }

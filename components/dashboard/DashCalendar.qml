@@ -25,7 +25,7 @@ ColumnLayout {
         horizontalAlignment: Text.AlignHCenter
 
         Component.onCompleted: {
-            fc.applyOutline(this, Qt.rgba(0, 0, 0, 0.35))
+            fc.applyOutline(this, fc.overlayBackground)
         }
     }
 
@@ -47,10 +47,14 @@ ColumnLayout {
                 Text {
                     anchors.centerIn: parent
                     text: modelData
-                    color: Qt.rgba(1, 1, 1, 0.35)
+                    color: fc.textMuted
                     font.family: fc.mainFont
                     font.pixelSize: 10
                     font.weight: Font.Bold
+                    
+                    Component.onCompleted: {
+                        fc.applyOutline(this, fc.overlayBackground)
+                    }
                 }
             }
         }
@@ -62,7 +66,6 @@ ColumnLayout {
             delegate: Item {
                 id: cellItem
                 Layout.fillWidth: true
-                // Tightened from 28 to 18 to remove excess padding between rows
                 implicitHeight: 18 
 
                 property int dayNumber: index + 1 - calRoot.firstDayOffset
@@ -80,6 +83,14 @@ ColumnLayout {
                     font.pixelSize: parent.isToday ? 13 : 11
                     font.weight: parent.isToday ? Font.Bold : Font.Normal
                     opacity: parent.isValidDay ? 1.0 : 0.0
+                    
+                    Component.onCompleted: {
+                        if (parent.isValidDay && !parent.isToday) {
+                            fc.applyOutline(this, fc.overlayBackground)
+                        } else if (parent.isToday) {
+                            fc.applyOutline(this, fc.overlayBackground)
+                        }
+                    }
                 }
             }
         }
