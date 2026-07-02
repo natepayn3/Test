@@ -24,15 +24,17 @@ PanelWindow {
         right: true
     }
 
-    property bool isOverviewActive: false
+    // FIXED: Bind directly to the global shell root property to prevent sync desaturation
+    property bool isOverviewActive: shellRoot.isOverviewActive
     visible: isOverviewActive
 
-    // --- CLEAN NATIVE IPC ROUTING MATRIX ---
+    // --- NATIVE IPC ROUTING MATRIX ---
     IpcHandler {
         target: "overview"
         
+        // FIXED: Mutate the global state wrapper handler path
         function toggle(): void {
-            overviewWindow.isOverviewActive = !overviewWindow.isOverviewActive;
+            shellRoot.isOverviewActive = !shellRoot.isOverviewActive;
         }
     }
 
@@ -99,15 +101,17 @@ PanelWindow {
         anchors.fill: parent
         focus: true
 
+        // FIXED: Clear structural state globally on escape key intercept
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Escape) {
-                overviewWindow.isOverviewActive = false;
+                shellRoot.isOverviewActive = false;
                 event.accepted = true;
             }
         }
 
+        // FIXED: Clear structural state globally on background layer tap
         TapHandler {
-            onTapped: { overviewWindow.isOverviewActive = false; }
+            onTapped: { shellRoot.isOverviewActive = false; }
         }
 
         // --- GRID MATRIX ---
@@ -288,9 +292,11 @@ PanelWindow {
                         id: tileMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
+                        
+                        // FIXED: Drop overlay cleanly globally when target workspace card is clicked
                         onClicked: {
                             Hyprland.dispatch(`hl.dsp.focus({ workspace = "${currentWsId}" })`);
-                            overviewWindow.isOverviewActive = false;
+                            shellRoot.isOverviewActive = false;
                         }
                     }
                 }
