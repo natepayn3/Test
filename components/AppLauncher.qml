@@ -35,6 +35,21 @@ Scope {
     signal closeRequested()
     onCloseRequested: launcherModuleRoot.active = false
 
+    // --- NATIVE IPC ROUTING MATRIX ---
+    IpcHandler {
+        target: "launcher"
+        
+        // Toggles the launcher overlay visibility state
+        function toggle(): void {
+            launcherModuleRoot.active = !launcherModuleRoot.active;
+        }
+
+        // Directly open the menu and force launch an executable target payload string
+        function launch(execStr: string): void {
+            launcherWindow.launchApp(execStr);
+        }
+    }
+
     PanelWindow {
         id: launcherWindow
         visible: false
