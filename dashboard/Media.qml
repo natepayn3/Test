@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import Qt5Compat.GraphicalEffects
+import "../../configs"
 
 RowLayout {
     id: mediaRoot
