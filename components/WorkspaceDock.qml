@@ -3,6 +3,9 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import "../components"
+import "../configs"
+import "../popups"
 
 PanelWindow {
     id: sideDockWindow
