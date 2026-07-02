@@ -4,6 +4,10 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import "components"
+import "components/dashboard"
+import "configs"
+import "popups"
+
 
 ShellRoot {
     id: shellRoot
