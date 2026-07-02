@@ -6,6 +6,7 @@ import QtQuick.Shapes
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
+import "../../configs"
 
 PanelWindow {
     id: dashboardWindow
