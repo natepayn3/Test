@@ -498,15 +498,22 @@ PanelWindow {
                 
                 let seenSinkIds = {};
                 let seenSourceIds = {};
-                let targetBlock = 0; 
+                let targetBlock = 0;
+                
+                let hasDefaultSink = false;
+                let hasDefaultSource = false;
 
                 for (let i = 0; i < lines.length; i++) {
                     let line = lines[i];
-                    
                     if (line.includes("Sinks:")) { targetBlock = 1; continue; }
                     if (line.includes("Sources:")) { targetBlock = 2; continue; }
                     if (line.includes("Filters:") || line.includes("Streams:") || line.includes("Settings:")) { 
-                        targetBlock = 0; 
+                        targetBlock = 0;
+                    }
+
+                    // If the line contains branch/leaf layout elements, it's a nested sub-node or client stream
+                    if (line.includes("├─") || line.includes("└─")) {
+                        continue;
                     }
 
                     let match = line.match(/(\*\s*)?\s*(\d+)\.\s+(.*)/);
@@ -515,18 +522,26 @@ PanelWindow {
                         let id = match[2].trim();
                         let rawName = match[3].trim();
                         
-                        let name = rawName.split("[")[0].trim().replace(/[├─└─│]/g, "");
-                        if (name === "") continue;
+                        // Clean off bracket properties (vol, muted) safely before checking content
+                        let cleanName = rawName.split("[")[0].replace(/[├─└─│]/g, "").trim();
+                        if (cleanName === "") continue;
 
-                        // Robust fallback: If numeric evaluation drops, fall back safely on raw node string definitions
                         if (targetBlock === 1) {
                             if (seenSinkIds[id]) continue;
                             seenSinkIds[id] = true;
-                            sinkModel.append({ isDefault: isDef, sinkTarget: id, sinkName: name });
+                            
+                            let finalDef = isDef && !hasDefaultSink;
+                            if (finalDef) hasDefaultSink = true;
+
+                            sinkModel.append({ isDefault: finalDef, sinkTarget: id, sinkName: cleanName });
                         } else if (targetBlock === 2) {
                             if (seenSourceIds[id]) continue;
                             seenSourceIds[id] = true;
-                            sourceModel.append({ isDefault: isDef, sourceTarget: id, sourceName: name });
+                            
+                            let finalDef = isDef && !hasDefaultSource;
+                            if (finalDef) hasDefaultSource = true;
+
+                            sourceModel.append({ isDefault: finalDef, sourceTarget: id, sourceName: cleanName });
                         }
                     }
                 }
